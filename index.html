@@ -1,0 +1,1610 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5fbfc">
+  <title>Safe Me · AI 原型</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef7f8;
+      --bg-deep: #dff2f3;
+      --surface: rgba(255, 255, 255, .92);
+      --surface-solid: #ffffff;
+      --surface-soft: #f3f8f8;
+      --text: #112d32;
+      --text-2: #516c71;
+      --text-3: #82979b;
+      --line: rgba(31, 92, 101, .11);
+      --brand: #08a8b5;
+      --brand-deep: #047d89;
+      --brand-soft: #dff7f8;
+      --blue: #3f7cf4;
+      --warning: #e49b2f;
+      --danger: #d95c6b;
+      --success: #18a979;
+      --shadow-sm: 0 8px 24px rgba(23, 68, 74, .08);
+      --shadow-lg: 0 30px 80px rgba(19, 64, 71, .18);
+      --radius-sm: 12px;
+      --radius: 20px;
+      --radius-lg: 28px;
+      --ease: cubic-bezier(.2, .8, .2, 1);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100dvh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 15%, rgba(8, 168, 181, .16), transparent 30%),
+        radial-gradient(circle at 85% 80%, rgba(63, 124, 244, .11), transparent 34%),
+        linear-gradient(145deg, var(--bg), var(--bg-deep));
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+    button, [role="button"] { touch-action: manipulation; }
+    button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid rgba(8, 168, 181, .28);
+      outline-offset: 2px;
+    }
+
+    .icon { width: 22px; height: 22px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-sm { width: 18px; height: 18px; }
+    .icon-lg { width: 30px; height: 30px; }
+
+    .workspace {
+      min-height: 100dvh;
+      display: grid;
+      grid-template-columns: 264px minmax(430px, 1fr);
+      align-items: center;
+      gap: 0;
+      padding: 0;
+    }
+
+    .project-panel {
+      grid-column: 1;
+      grid-row: 1;
+      align-self: stretch;
+      position: relative;
+      min-width: 0;
+      overflow: hidden;
+      color: #284348;
+      background: #f5faf9;
+      border-right: 1px solid rgba(20, 105, 108, .12);
+      box-shadow: 14px 0 36px rgba(25, 68, 73, .08);
+      z-index: 110;
+    }
+    .project-header {
+      height: 82px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 13px 12px 12px 14px;
+      color: #fff;
+      background: linear-gradient(145deg, #075f69 0%, #078792 62%, #0aa697 100%);
+      border-bottom: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 8px 22px rgba(5, 102, 111, .18);
+    }
+    .project-emblem {
+      width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center;
+      border-radius: 13px; color: #fff; background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.2); box-shadow: inset 0 1px rgba(255,255,255,.18);
+    }
+    .project-emblem .icon { width: 21px; height: 21px; stroke-width: 1.9; }
+    .project-name { flex: 1; min-width: 0; }
+    .project-kicker { display: block; margin-bottom: 2px; color: rgba(255,255,255,.67); font-size: 8px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .project-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 14px; font-weight: 760; letter-spacing: -.01em; color: #fff; }
+    .project-nav { display: flex; gap: 3px; }
+    .project-nav button {
+      width: 31px; height: 34px; display: grid; place-items: center; padding: 0;
+      border: 1px solid transparent; border-radius: 10px; color: rgba(255,255,255,.86); background: transparent; cursor: pointer;
+      transition: background .18s ease, border-color .18s ease, color .18s ease;
+    }
+    .project-nav button:hover { color: #fff; background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.14); }
+    .project-nav button:active { background: rgba(255,255,255,.22); }
+    .project-nav .icon { width: 15px; height: 15px; stroke-width: 1.8; }
+    .tree-search { position: relative; margin: 14px 12px 12px; }
+    .tree-search .icon { position: absolute; top: 50%; left: 13px; width: 17px; height: 17px; transform: translateY(-50%); color: #708b8e; pointer-events: none; }
+    .tree-search input {
+      width: 100%; height: 42px; padding: 0 14px 0 40px;
+      border: 1px solid #d9e7e7; border-radius: 14px;
+      color: #243f44; background: rgba(255,255,255,.9);
+      box-shadow: 0 5px 16px rgba(31,73,77,.05); font-size: 13px; outline: 0;
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .tree-search input::placeholder { color: #8aa0a3; }
+    .tree-search input:hover { border-color: #c8dddd; background: #fff; }
+    .tree-search input:focus { border-color: rgba(8,168,181,.58); background: #fff; box-shadow: 0 0 0 4px rgba(8,168,181,.1), 0 8px 18px rgba(31,73,77,.06); }
+    .project-tree {
+      height: calc(100dvh - 150px); overflow: auto; padding: 2px 10px 24px;
+      scrollbar-width: thin; scrollbar-color: rgba(56,124,127,.28) transparent;
+    }
+    .project-tree::-webkit-scrollbar { width: 7px; }
+    .project-tree::-webkit-scrollbar-track { background: transparent; }
+    .project-tree::-webkit-scrollbar-thumb { border: 2px solid #f5faf9; border-radius: 8px; background: rgba(56,124,127,.3); }
+    .tree-row {
+      position: relative; width: 100%; min-height: 36px; display: flex; align-items: center; gap: 7px;
+      margin: 2px 0; padding: 6px 9px 6px calc(9px + var(--depth, 0) * 14px);
+      border: 1px solid transparent; border-radius: 10px;
+      color: #40575b; background: transparent; text-align: left; font-size: 12.5px; cursor: pointer;
+      transition: color .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+    .tree-row:hover { color: #123f45; background: rgba(255,255,255,.82); border-color: #deebea; }
+    .tree-row:active { background: #e9f5f3; }
+    .tree-row.selected {
+      color: #075d63; background: #dff5f2; border-color: rgba(10,166,151,.2);
+      box-shadow: inset 3px 0 #0aa697, 0 5px 14px rgba(17,116,109,.08); font-weight: 760;
+    }
+    .tree-row:focus-visible { outline: 2px solid rgba(8,168,181,.5); outline-offset: 1px; }
+    .tree-caret { width: 10px; flex: 0 0 10px; color: #759094; font-size: 10px; transition: transform .18s ease; transform-origin: center; }
+    .tree-row[aria-expanded="false"] .tree-caret { transform: rotate(-90deg); }
+    .tree-spacer { width: 10px; flex: 0 0 10px; }
+    .tree-icon { width: 16px; height: 16px; color: #789094; stroke-width: 1.65; }
+    .tree-row[data-tree-toggle="requirements"],
+    .tree-row[data-tree-toggle="version"] { min-height: 40px; margin-top: 7px; font-weight: 760; letter-spacing: .01em; }
+    .tree-row[data-tree-toggle="requirements"] { color: #6550a5; background: #f1edfb; border-color: rgba(101,80,165,.09); }
+    .tree-row[data-tree-toggle="requirements"] .tree-icon { color: #7656c7; }
+    .tree-row[data-tree-toggle="version"] { color: #08717a; background: #e4f4f3; border-color: rgba(8,113,122,.09); }
+    .tree-row[data-tree-toggle="version"] .tree-icon { color: #0896a2; }
+    .tree-row[data-tree-toggle="flows"], .tree-row[data-tree-toggle="prototype"] { margin-top: 5px; color: #324e53; font-weight: 680; }
+    .tree-row[data-tree-toggle="flows"] .tree-icon { color: #d2842d; }
+    .tree-row[data-tree-toggle="prototype"] .tree-icon { color: #3f7cf4; }
+    .tree-group[data-tree-group="requirements"] .tree-icon { color: #8b62da; }
+    .tree-group[data-tree-group="flows"] .tree-icon { color: #d2842d; }
+    .tree-group[data-tree-group="prototype"] > .tree-row .tree-icon { color: #3f7cf4; }
+    .tree-group { position: relative; }
+    .tree-group::before {
+      content: ""; position: absolute; z-index: 0; top: 0; bottom: 0; left: 25px;
+      width: 1px; background: linear-gradient(180deg, rgba(74,130,133,.18), rgba(74,130,133,.04)); pointer-events: none;
+    }
+    .tree-group .tree-group::before { left: 39px; }
+    .tree-group .tree-group .tree-group::before { left: 53px; }
+    .tree-group .tree-row { z-index: 1; }
+    .tree-row.selected .tree-icon { color: #07978f; }
+    .tree-label { position: relative; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .tree-group[hidden] { display: none; }
+    .tree-row[hidden] { display: none; }
+
+    .prototype-comparison {
+      grid-column: 2;
+      grid-row: 1;
+      width: min(900px, calc(100% - 40px));
+      justify-self: center;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 24px;
+    }
+    .prototype-comparison.is-hidden { display: none; }
+    .phone-panel {
+      flex: 1 1 0;
+      width: 0;
+      max-width: min(418px, calc((100dvh - 66px) * 0.469663));
+      min-width: 0;
+    }
+    .locale-label {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      color: #42636a;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .locale-label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #3f7cf4; box-shadow: 0 0 0 4px rgba(63,124,244,.11); }
+    .phone-panel[data-locale="zh"] .locale-label::before { background: #08a8b5; box-shadow: 0 0 0 4px rgba(8,168,181,.11); }
+    .device {
+      position: relative;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 418 / 890;
+      max-height: 890px;
+      min-height: 0;
+      overflow: hidden;
+      border: 8px solid rgba(17, 45, 50, .92);
+      border-radius: 42px;
+      background: var(--surface-solid);
+      box-shadow: var(--shadow-lg);
+      isolation: isolate;
+      container-type: inline-size;
+    }
+    .device.is-hidden { display: none; }
+
+    .doc-viewer {
+      grid-column: 2;
+      grid-row: 1;
+      width: min(1040px, calc(100% - 64px));
+      height: min(860px, calc(100dvh - 56px));
+      justify-self: center;
+      overflow: hidden;
+      border: 1px solid rgba(34, 92, 104, .12);
+      border-radius: 28px;
+      background: rgba(255,255,255,.94);
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(18px);
+      display: none;
+    }
+    .doc-viewer.active { display: block; }
+    .doc-page { height: 100%; overflow: auto; padding: 34px 38px 42px; }
+    .doc-page[hidden] { display: none; }
+    .doc-kicker { margin: 0 0 8px; color: var(--brand-deep); font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .doc-page h1 { margin: 0; font-size: 32px; line-height: 1.15; letter-spacing: -.035em; }
+    .doc-lead { margin: 10px 0 26px; color: var(--text-2); font-size: 14px; }
+    .doc-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+    .doc-meta span { padding: 6px 10px; border-radius: 999px; color: #06727d; background: #e4f7f6; font-size: 11px; font-weight: 700; }
+    .doc-table-wrap { overflow: auto; border: 1px solid #e4edf0; border-radius: 18px; }
+    .doc-table { width: 100%; border-collapse: collapse; min-width: 720px; font-size: 13px; }
+    .doc-table th { padding: 12px 14px; color: #47606a; background: #f2f8f9; text-align: left; font-size: 11px; letter-spacing: .04em; }
+    .doc-table td { padding: 13px 14px; border-top: 1px solid #edf2f4; vertical-align: top; color: #2e424a; }
+    .doc-table tbody tr:hover { background: #f9fcfd; }
+    .doc-table .number { width: 58px; color: #789098; font-variant-numeric: tabular-nums; }
+    .doc-table .version { color: #087d89; font-weight: 750; white-space: nowrap; }
+    .doc-table .tag { display: inline-block; padding: 3px 8px; border-radius: 999px; color: #7251bd; background: #f0eaff; font-size: 10px; font-weight: 750; }
+    .doc-table .link { color: #2f69d9; font-weight: 700; white-space: nowrap; }
+    .flow-frame { width: 100%; height: calc(100% - 96px); min-height: 620px; border: 1px solid #e4edf0; border-radius: 18px; background: #fff; }
+    .req-dot {
+      width: 22px; height: 22px; display: inline-grid; place-items: center; margin-left: 8px;
+      border: 0; border-radius: 50%; color: #fff; background: #0aa697; cursor: pointer;
+      font-size: 11px; font-weight: 800; box-shadow: 0 0 0 0 rgba(10,166,151,.35); animation: reqPulse 1.9s infinite;
+    }
+    .requirement-modal { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 24px; background: rgba(8,28,33,.46); backdrop-filter: blur(5px); }
+    .requirement-modal[hidden] { display: none; }
+    .requirement-dialog { width: min(640px, 100%); max-height: min(760px, calc(100dvh - 48px)); overflow: auto; padding: 24px; border-radius: 24px; background: #fff; box-shadow: 0 30px 80px rgba(11,42,48,.28); }
+    .requirement-dialog header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .requirement-dialog h2 { flex: 1; margin: 0; font-size: 22px; }
+    .requirement-detail-grid { display: grid; gap: 10px; }
+    .requirement-detail { padding: 13px 15px; border-radius: 14px; background: #f5f9fa; }
+    .requirement-detail strong { display: block; margin-bottom: 4px; color: #087d89; font-size: 11px; letter-spacing: .04em; }
+    .requirement-detail p { margin: 0; color: #344b52; font-size: 13px; line-height: 1.65; }
+    .requirement-note { margin: 14px 0 0; color: #778d93; font-size: 11px; }
+    .device::before {
+      content: ""; position: absolute; z-index: 50; top: 10px; left: 50%; transform: translateX(-50%);
+      width: 94px; height: 25px; border-radius: 20px; background: rgba(8, 24, 27, .96); pointer-events: none;
+    }
+    .status-bar {
+      position: absolute; inset: 0 0 auto 0; z-index: 40; height: 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 21px 0; font-size: 12px; font-weight: 720; pointer-events: none;
+    }
+    .status-icons { display: flex; gap: 5px; align-items: center; }
+    .status-pill { width: 18px; height: 8px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; }
+    .status-pill::after { content: ""; position: absolute; inset: 1.5px; width: 70%; border-radius: 1px; background: currentColor; }
+
+    .screen-stack { position: absolute; inset: 0; background: var(--bg); }
+    .screen {
+      position: absolute; inset: 0; overflow: hidden auto;
+      padding: 60px 20px 108px;
+      background:
+        radial-gradient(circle at 100% 0, rgba(8,168,181,.12), transparent 26%),
+        var(--bg);
+      opacity: 0; visibility: hidden; transform: translateX(18px);
+      transition: opacity .22s var(--ease), transform .28s var(--ease), visibility .22s;
+      scrollbar-width: none;
+    }
+    .screen::-webkit-scrollbar { display: none; }
+    .screen.active { opacity: 1; visibility: visible; transform: translateX(0); z-index: 3; }
+    .screen.subscreen { padding-top: 54px; }
+
+    .topbar { min-height: 46px; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .topbar h2 { margin: 0; flex: 1; text-align: center; font-size: 17px; letter-spacing: -.02em; }
+    .topbar .spacer { width: 44px; }
+    .icon-btn {
+      width: 44px; height: 44px; display: grid; place-items: center; border: 0;
+      border-radius: 14px; background: rgba(255,255,255,.72); box-shadow: inset 0 0 0 1px var(--line);
+      cursor: pointer; transition: transform .18s var(--ease), background .18s;
+    }
+    .icon-btn:hover { background: var(--surface-solid); }
+    .icon-btn:active { transform: scale(.95); }
+
+    .eyebrow { margin: 0 0 8px; color: var(--brand-deep); font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .hero-title { margin: 0; font-size: 34px; line-height: 1.06; letter-spacing: -.045em; }
+    .hero-copy { margin: 12px 0 0; color: var(--text-2); font-size: 14px; }
+    .home-head { padding: 9px 4px 26px; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .feature-card {
+      min-height: 164px; padding: 17px; border: 0; border-radius: var(--radius);
+      background: var(--surface); box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--line);
+      text-align: left; cursor: pointer; overflow: hidden; position: relative;
+      transition: transform .22s var(--ease), box-shadow .22s var(--ease);
+      backdrop-filter: blur(16px);
+    }
+    .feature-card::after { content: ""; position: absolute; width: 90px; height: 90px; border-radius: 50%; right: -32px; bottom: -38px; background: var(--card-glow, var(--brand-soft)); opacity: .75; }
+    .feature-card:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(23,68,74,.13); }
+    .feature-card:active { transform: scale(.98); }
+    .feature-card.wide { grid-column: 1 / -1; min-height: 126px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 15px; }
+    .feature-card.wide::after { right: -12px; bottom: -48px; width: 150px; height: 150px; }
+    .feature-icon { width: 44px; height: 44px; display: grid; place-items: center; color: var(--card-color, var(--brand)); border-radius: 15px; background: var(--card-bg, var(--brand-soft)); }
+    .feature-card h3 { position: relative; z-index: 1; margin: 22px 0 6px; font-size: 15px; line-height: 1.25; letter-spacing: -.02em; }
+    .feature-card.wide h3 { margin: 0 0 4px; }
+    .feature-card p { position: relative; z-index: 1; margin: 0; color: var(--text-3); font-size: 11px; }
+    .feature-card .arrow { position: relative; z-index: 1; color: var(--text-3); }
+
+    .section-title { margin: 24px 2px 12px; display: flex; align-items: center; justify-content: space-between; }
+    .section-title h3 { margin: 0; font-size: 15px; }
+    .section-title button { border: 0; background: none; color: var(--brand-deep); font-size: 12px; font-weight: 700; cursor: pointer; }
+    .safety-note { display: flex; gap: 12px; padding: 15px; border-radius: var(--radius); background: linear-gradient(135deg, var(--brand-soft), rgba(255,255,255,.72)); border: 1px solid rgba(8,168,181,.12); }
+    .safety-note strong { display: block; margin-bottom: 2px; font-size: 13px; }
+    .safety-note p { margin: 0; color: var(--text-2); font-size: 11px; }
+
+    .search-box { display: grid; grid-template-columns: 1fr 48px; gap: 10px; margin: 12px 0 18px; }
+    .field { position: relative; }
+    .field .icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-3); }
+    .field input {
+      width: 100%; height: 50px; padding: 0 14px 0 46px; color: var(--text);
+      border: 1px solid var(--line); border-radius: 16px; background: var(--surface-solid);
+      box-shadow: var(--shadow-sm); font-size: 14px;
+    }
+    .search-submit { width: 48px; height: 50px; border: 0; border-radius: 16px; color: #fff; background: linear-gradient(145deg, #20bdc7, #078e9a); cursor: pointer; box-shadow: 0 10px 24px rgba(8,168,181,.25); }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { min-height: 34px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--text-2); background: var(--surface); cursor: pointer; font-size: 12px; }
+    .chip:hover { border-color: rgba(8,168,181,.35); color: var(--brand-deep); }
+
+    .card { padding: 17px; border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--line); backdrop-filter: blur(16px); }
+    .risk-result { display: none; margin-top: 16px; }
+    .risk-result.show { display: block; animation: rise .32s var(--ease); }
+    .risk-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 15px; }
+    .risk-head h3 { margin: 0 0 4px; font-size: 22px; }
+    .risk-head p { margin: 0; color: var(--text-3); font-size: 11px; }
+    .risk-badge { padding: 7px 10px; border-radius: 999px; color: #08724d; background: #dff8ee; font-size: 11px; font-weight: 800; white-space: nowrap; }
+    .info-list { display: grid; gap: 10px; }
+    .info-row { display: grid; grid-template-columns: 34px 1fr; gap: 11px; padding: 12px 0; border-top: 1px solid var(--line); }
+    .info-row:first-child { border-top: 0; }
+    .mini-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 11px; color: var(--brand); background: var(--brand-soft); }
+    .info-row strong { display: block; margin-bottom: 3px; font-size: 12px; }
+    .info-row p { margin: 0; color: var(--text-2); font-size: 11px; line-height: 1.6; }
+    .loading { display: none; padding: 30px; text-align: center; color: var(--text-2); }
+    .loading.show { display: block; }
+    .spinner { width: 26px; height: 26px; margin: 0 auto 12px; border: 3px solid var(--brand-soft); border-top-color: var(--brand); border-radius: 50%; animation: spin .8s linear infinite; }
+
+    .scan-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px; border-radius: 16px; background: rgba(17,45,50,.06); }
+    .scan-switch button { min-height: 42px; border: 0; border-radius: 12px; background: transparent; color: var(--text-3); cursor: pointer; font-size: 12px; font-weight: 700; }
+    .scan-switch button.active { color: var(--text); background: var(--surface-solid); box-shadow: var(--shadow-sm); }
+    .radar-wrap { min-height: 340px; display: grid; place-items: center; position: relative; }
+    .radar {
+      width: 224px; aspect-ratio: 1; position: relative; border-radius: 50%;
+      background: repeating-radial-gradient(circle, transparent 0 35px, rgba(8,168,181,.16) 36px 37px), radial-gradient(circle, rgba(8,168,181,.12), transparent 67%);
+      box-shadow: inset 0 0 0 1px rgba(8,168,181,.12);
+    }
+    .radar::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0 72%, rgba(8,168,181,.32) 92%, rgba(8,168,181,.03)); animation: radar 2.8s linear infinite; }
+    .radar-center { position: absolute; inset: 50% auto auto 50%; transform: translate(-50%,-50%); width: 52px; height: 52px; display: grid; place-items: center; color: white; border-radius: 50%; background: linear-gradient(145deg,#2ac4cc,#078b98); box-shadow: 0 0 0 10px rgba(8,168,181,.1), 0 12px 28px rgba(8,168,181,.24); }
+    .blip { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 5px rgba(217,92,107,.14); opacity: 0; transition: opacity .3s; }
+    .blip.one { left: 31px; top: 82px; }
+    .blip.two { right: 46px; bottom: 54px; }
+    .scanning .blip { opacity: 1; animation: pulse 1.6s ease-in-out infinite; }
+    .scan-copy { text-align: center; margin-top: -12px; }
+    .scan-copy h3 { margin: 0 0 5px; font-size: 16px; }
+    .scan-copy p { margin: 0; color: var(--text-3); font-size: 11px; }
+    .primary-btn { width: 100%; min-height: 50px; border: 0; border-radius: 16px; color: white; background: linear-gradient(145deg,#20bdc7,#078e9a); box-shadow: 0 12px 26px rgba(8,168,181,.25); font-weight: 760; cursor: pointer; transition: transform .18s var(--ease), filter .18s; }
+    .primary-btn:hover { filter: brightness(1.04); }
+    .primary-btn:active { transform: scale(.98); }
+    .primary-btn[disabled] { opacity: .55; cursor: wait; }
+    .device-result { display: none; margin-top: 14px; }
+    .device-result.show { display: block; animation: rise .3s var(--ease); }
+    .device-line { display: flex; gap: 12px; align-items: center; }
+    .device-line .feature-icon { background: #ffebee; color: var(--danger); }
+    .device-line h4 { margin: 0 0 3px; font-size: 13px; }
+    .device-line p { margin: 0; color: var(--text-3); font-size: 11px; }
+    .danger-label { margin-left: auto; padding: 5px 9px; border-radius: 999px; background: #ffebee; color: #bd4150; font-size: 10px; font-weight: 800; }
+
+    .scan-result-list { display: grid; gap: 10px; }
+    .scan-result-item { width: 100%; display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center; padding: 14px; border: 1px solid var(--line); border-radius: 17px; color: var(--text); background: var(--surface); text-align: left; }
+    button.scan-result-item { cursor: pointer; }
+    button.scan-result-item:hover { border-color: rgba(8,168,181,.35); box-shadow: var(--shadow-sm); }
+    .device-kind { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 13px; color: #3f7cf4; background: #e8efff; font-size: 10px; font-weight: 800; }
+    .device-kind img { width: 25px; height: 25px; display: block; }
+    .scan-fields { display: grid; grid-template-columns: 76px 1fr; gap: 4px 7px; min-width: 0; font-size: 10px; }
+    .scan-fields dt { color: var(--text-3); }
+    .scan-fields dd { margin: 0; overflow: hidden; color: var(--text); white-space: nowrap; text-overflow: ellipsis; }
+    .scan-item-side { display: grid; justify-items: end; gap: 13px; }
+    .suspicious-tag { padding: 4px 7px; border-radius: 7px; color: #ad4251; background: #ffebee; font-size: 9px; font-weight: 800; }
+    .distance-page { text-align: center; }
+    .distance-page h3 { margin: 16px 0 5px; font-size: 14px; }
+    .distance-type { margin: 0; color: var(--text-2); font-size: 14px; }
+    .distance-value { margin: 5px 0 24px; font-size: 34px; line-height: 1; letter-spacing: -.04em; }
+    .distance-animation { width: 170px; aspect-ratio: 1; display: grid; place-items: center; margin: 0 auto; border-radius: 50%; background: repeating-radial-gradient(circle, transparent 0 25px, rgba(8,168,181,.16) 26px 27px), radial-gradient(circle, rgba(8,168,181,.13), transparent 68%); }
+    .distance-animation .radar-center { position: static; transform: none; }
+
+    .segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 8px 0 14px; border-radius: 15px; background: rgba(17,45,50,.06); }
+    .segmented button { min-height: 40px; border: 0; border-radius: 11px; background: transparent; color: var(--text-3); font-size: 12px; font-weight: 750; cursor: pointer; }
+    .segmented button.active { color: var(--text); background: var(--surface-solid); box-shadow: var(--shadow-sm); }
+    .resource-list { display: grid; gap: 10px; }
+    .resource-card { display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center; padding: 14px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
+    .resource-card h4 { margin: 0 0 3px; font-size: 13px; }
+    .resource-card p { margin: 0; color: var(--text-3); font-size: 10px; }
+    .resource-card .distance { margin-top: 5px; color: var(--brand-deep); font-size: 10px; font-weight: 750; }
+    .nav-btn { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 14px; color: var(--brand-deep); background: var(--brand-soft); cursor: pointer; }
+
+    .privacy-card { display: grid; grid-template-columns: 42px 1fr; gap: 12px; margin-bottom: 18px; padding: 15px; border-radius: var(--radius); color: #eaffff; background: linear-gradient(135deg,#0a6670,#0a909b); box-shadow: 0 16px 30px rgba(8,120,132,.22); }
+    .privacy-card h3 { margin: 0 0 3px; font-size: 13px; }
+    .privacy-card p { margin: 0; color: rgba(255,255,255,.74); font-size: 10px; }
+    .docs { display: grid; gap: 10px; }
+    .doc-record { padding: 13px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
+    .doc-record-head { min-height: 28px; display: flex; align-items: center; gap: 8px; }
+    .doc-record-head h4 { flex: 1; margin: 0; font-size: 13px; }
+    .doc-manage, .doc-action { padding: 5px 7px; border: 0; border-radius: 8px; color: var(--brand-deep); background: transparent; font-size: 10px; font-weight: 750; cursor: pointer; }
+    .doc-action.danger { color: var(--danger); }
+    .doc-action:hover, .doc-manage:hover { background: var(--brand-soft); }
+    .doc-thumbs { display: flex; gap: 7px; margin-top: 9px; overflow: hidden; }
+    .doc-thumb, .upload-tile { width: 48px; height: 52px; flex: 0 0 48px; display: grid; place-items: center; padding: 0; border: 1px solid rgba(63,124,244,.16); border-radius: 10px; color: var(--doc-color,var(--brand)); background: var(--doc-bg,var(--brand-soft)); cursor: pointer; overflow: hidden; }
+    .doc-thumb .icon { width: 23px; height: 23px; }
+    .doc-thumb img, .upload-tile img { width: 100%; height: 100%; object-fit: cover; }
+    .manage-hint { margin: 8px 0 0; color: var(--text-3); font-size: 9px; }
+    .vault-fab {
+      position: absolute; z-index: 45; right: 24px; bottom: 104px;
+      width: 56px; height: 56px; display: grid; place-items: center; padding: 0;
+      border: 1px solid rgba(255,255,255,.64); border-radius: 50%;
+      color: #fff; background: linear-gradient(145deg, #10b8bd, #087d89);
+      box-shadow: 0 14px 30px rgba(7,116,126,.3), inset 0 1px rgba(255,255,255,.28);
+      cursor: pointer; opacity: 0; visibility: hidden; pointer-events: none;
+      transform: translateY(12px) scale(.92);
+      transition: opacity .2s var(--ease), transform .24s var(--ease), visibility .2s, box-shadow .18s ease;
+    }
+    .vault-fab .icon { width: 26px; height: 26px; stroke-width: 2; }
+    .device.vault-active .vault-fab { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0) scale(1); }
+    .vault-fab:hover { box-shadow: 0 17px 34px rgba(7,116,126,.36), inset 0 1px rgba(255,255,255,.3); transform: translateY(-2px) scale(1.03); }
+    .vault-fab:active { transform: translateY(0) scale(.96); }
+    .recharge-screen { padding-bottom: 190px; }
+    .subscription-hero { display: grid; justify-items: center; gap: 10px; padding: 8px 0 20px; text-align: center; }
+    .subscription-logo { width: 62px; height: 62px; display: grid; place-items: center; border-radius: 20px; color: #fff; background: linear-gradient(145deg,#18bac0,#087d89); box-shadow: 0 14px 28px rgba(8,125,137,.2); }
+    .subscription-logo .icon { width: 32px; height: 32px; }
+    .subscription-hero p { margin: 0; color: var(--text-2); font-size: 11px; font-weight: 650; }
+    .recharge-plans { display: grid; gap: 10px; }
+    .recharge-plan { position: relative; display: grid; grid-template-columns: 95px 1fr auto; align-items: center; gap: 10px; min-height: 72px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.86); box-shadow: var(--shadow-sm); cursor: pointer; transition: border-color .18s ease, background .18s ease, box-shadow .18s ease; }
+    .recharge-plan input { position: absolute; opacity: 0; pointer-events: none; }
+    .recharge-plan strong { padding-right: 9px; border-right: 1px solid rgba(17,45,50,.16); font-size: 11px; line-height: 1.25; }
+    .recharge-plan span { color: var(--text-2); font-size: 8px; line-height: 1.45; }
+    .recharge-plan b { font-size: 16px; font-weight: 820; }
+    .recharge-plan.selected { border-color: rgba(8,168,181,.55); background: #e9f9f8; box-shadow: 0 8px 20px rgba(8,125,137,.12); }
+    .recharge-restore { margin: 13px 2px 15px; color: var(--text-2); font-size: 9px; line-height: 1.45; }
+    .recharge-restore button { padding: 0; border: 0; color: var(--brand-deep); background: transparent; font: inherit; font-weight: 760; text-decoration: underline; cursor: pointer; }
+    .subscription-notes { padding: 14px; border-radius: 16px; background: rgba(255,255,255,.68); border: 1px solid var(--line); }
+    .subscription-notes h3 { margin: 0 0 10px; font-size: 11px; }
+    .subscription-notes p { margin: 0 0 9px; color: var(--text-2); font-size: 8px; line-height: 1.55; }
+    .subscription-notes p:last-child { margin-bottom: 0; }
+    .recharge-bar {
+      position: absolute; z-index: 46; left: 14px; right: 14px; bottom: 12px;
+      padding: 10px 12px 11px; border: 1px solid var(--line); border-radius: 22px;
+      background: rgba(255,255,255,.94); box-shadow: 0 18px 38px rgba(20,64,70,.2); backdrop-filter: blur(22px);
+      opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(12px);
+      transition: opacity .2s var(--ease), transform .24s var(--ease), visibility .2s;
+    }
+    .device.recharge-active .recharge-bar { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0); }
+    .device.recharge-active .bottom-nav { display: none; }
+    .recharge-trial { margin: 0 0 7px; color: var(--text-2); font-size: 8px; line-height: 1.35; text-align: center; }
+    .recharge-subscribe { width: 100%; min-height: 42px; border: 0; border-radius: 13px; color: #fff; background: #173f48; font-size: 11px; font-weight: 800; cursor: pointer; }
+    .recharge-legal { margin: 7px 0 0; color: var(--text-3); font-size: 7px; line-height: 1.35; text-align: center; }
+    .recharge-links { display: flex; justify-content: center; gap: 12px; margin-top: 5px; }
+    .recharge-links button { padding: 0; border: 0; color: var(--brand-deep); background: none; font-size: 7px; cursor: pointer; }
+    .vault-form { display: grid; gap: 18px; }
+    .vault-form-section label, .vault-form-section > strong { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 780; }
+    .vault-input { width: 100%; height: 50px; padding: 0 14px; border: 1px solid var(--line); border-radius: 15px; color: var(--text); background: var(--surface-solid); box-shadow: var(--shadow-sm); }
+    .vault-form .chips { margin-top: 2px; }
+    .upload-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .upload-tile { border-style: dashed; color: var(--brand-deep); background: rgba(255,255,255,.55); }
+    .upload-name { width: 58px; color: var(--text-3); font-size: 8px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .upload-meta { margin: 8px 0 0; color: var(--text-3); font-size: 9px; line-height: 1.5; }
+    .vault-error { min-height: 16px; margin: -8px 0 0; color: var(--danger); font-size: 10px; }
+    .vault-preview { min-height: 470px; display: grid; place-items: center; align-content: center; gap: 18px; }
+    .vault-preview-art { width: min(260px, 88%); aspect-ratio: 4 / 3; display: grid; place-items: center; border-radius: 20px; color: var(--blue); background: #e8efff; box-shadow: inset 0 0 0 1px rgba(63,124,244,.12), var(--shadow-sm); }
+    .vault-preview-art .icon { width: 72px; height: 72px; }
+    .vault-preview p { margin: 0; color: var(--text-3); font-size: 11px; }
+    .vault-dialog-backdrop { position: absolute; inset: 0; z-index: 90; display: grid; place-items: center; padding: 24px; background: rgba(3,18,20,.52); opacity: 0; visibility: hidden; transition: .2s; backdrop-filter: blur(3px); }
+    .vault-dialog-backdrop.open { opacity: 1; visibility: visible; }
+    .vault-dialog { width: 100%; padding: 20px; border-radius: 22px; background: #fff; box-shadow: var(--shadow-lg); }
+    .vault-dialog h3 { margin: 0 0 8px; font-size: 17px; }
+    .vault-dialog p { margin: 0 0 16px; color: var(--text-2); font-size: 11px; }
+    .vault-dialog-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+    .secondary-btn { min-height: 44px; border: 1px solid var(--line); border-radius: 14px; color: var(--text-2); background: #fff; font-weight: 750; cursor: pointer; }
+    .danger-btn { min-height: 44px; border: 0; border-radius: 14px; color: #fff; background: var(--danger); font-weight: 780; cursor: pointer; }
+    .source-options { display: grid; gap: 8px; }
+    .source-option { min-height: 52px; padding: 0 14px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 15px; background: #fff; cursor: pointer; font-weight: 700; }
+
+    .deletion-flow .bottom-nav { display: none; }
+    .deletion-flow .screen.active { padding-bottom: 28px; }
+    .deletion-copy { margin-top: 12px; padding: 20px; border-radius: 22px; background: rgba(255,255,255,.9); border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+    .deletion-copy h3 { margin: 0 0 12px; font-size: 17px; }
+    .deletion-copy p { margin: 0 0 12px; color: var(--text-2); font-size: 11px; line-height: 1.7; }
+    .deletion-copy ol { margin: 0; padding-left: 20px; color: var(--text-2); font-size: 12px; line-height: 1.8; }
+    .deletion-copy li + li { margin-top: 8px; }
+    .delete-agree-wrap { position: absolute; left: 20px; right: 20px; bottom: 24px; }
+    .delete-agree-wrap .primary-btn:disabled { cursor: not-allowed; color: #8f9da0; background: #e2e8e9; box-shadow: none; }
+    .delete-countdown { margin-left: 8px; font-variant-numeric: tabular-nums; }
+    .deletion-confirm-screen { display: flex; flex-direction: column; }
+    .deletion-confirm-sheet { margin-top: auto; padding: 20px; border-radius: 24px; background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow-lg); }
+    .deletion-confirm-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .deletion-confirm-head h3 { flex: 1; margin: 0; color: var(--danger); text-align: center; font-size: 16px; }
+    .deletion-confirm-head .icon-btn { width: 36px; height: 36px; border-radius: 12px; box-shadow: none; }
+    .deletion-warning { margin: 0; color: var(--danger); font-size: 11px; line-height: 1.65; }
+    .deletion-warning strong { display: block; margin-bottom: 8px; }
+    .delete-now { width: 100%; min-height: 48px; margin-top: 18px; border: 0; border-radius: 15px; color: #fff; background: var(--danger); font-weight: 800; cursor: pointer; box-shadow: 0 12px 24px rgba(217,92,107,.22); }
+
+    .profile-head { padding: 16px 2px 20px; display: flex; gap: 13px; align-items: center; }
+    .avatar { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 19px; color: #fff; background: linear-gradient(145deg,#23c3cc,#087d89); box-shadow: 0 12px 26px rgba(8,168,181,.23); }
+    .profile-head h2 { margin: 0 0 4px; font-size: 18px; }
+    .profile-head p { margin: 0; color: var(--text-3); font-size: 11px; }
+    .member-card { position: relative; overflow: hidden; padding: 18px; border-radius: 22px; color: #fff; background: linear-gradient(135deg,#173f48,#0d7580); box-shadow: 0 18px 34px rgba(8,82,91,.24); }
+    .member-card::after { content:""; position:absolute; width:170px; height:170px; border-radius:50%; right:-70px; bottom:-100px; background:rgba(255,255,255,.12); }
+    .member-card strong { font-size: 15px; }
+    .member-card p { margin: 5px 0 15px; color: rgba(255,255,255,.68); font-size: 10px; }
+    .member-card button { min-height: 38px; padding: 0 15px; border: 0; border-radius: 12px; color: #0c6872; background: #e9ffff; font-size: 11px; font-weight: 800; cursor: pointer; }
+    .settings { margin-top: 15px; overflow: hidden; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); }
+    .setting-row { width: 100%; min-height: 58px; padding: 0 15px; display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: left; cursor: pointer; }
+    .setting-row:last-child { border-bottom: 0; }
+    .setting-row .mini-icon { width: 32px; height: 32px; }
+    .setting-row span { font-size: 12px; font-weight: 650; }
+    .setting-row small { color: var(--text-3); font-size: 10px; }
+    .setting-row.danger { color: var(--danger); }
+
+    .bottom-nav {
+      position: absolute; z-index: 30; left: 14px; right: 14px; bottom: 12px;
+      min-height: 74px; padding: 8px 20px max(8px, env(safe-area-inset-bottom));
+      display: grid; grid-template-columns: 1fr 1fr; align-items: center;
+      border: 1px solid var(--line); border-radius: 24px; background: rgba(255,255,255,.86);
+      box-shadow: 0 16px 38px rgba(20,64,70,.18); backdrop-filter: blur(22px);
+    }
+    .nav-item { min-height: 52px; display: grid; place-items: center; align-content: center; gap: 2px; border: 0; border-radius: 16px; color: var(--text-3); background: transparent; cursor: pointer; }
+    .nav-item span { font-size: 10px; font-weight: 700; }
+    .nav-item.active { color: var(--brand-deep); background: var(--brand-soft); }
+
+    .sheet-backdrop { position: absolute; inset: 0; z-index: 70; display: grid; align-items: end; background: rgba(3,18,20,.52); opacity: 0; visibility: hidden; transition: opacity .2s, visibility .2s; backdrop-filter: blur(3px); }
+    .sheet-backdrop.open { opacity: 1; visibility: visible; }
+    .sheet { max-height: 82%; overflow: auto; padding: 11px 20px 28px; border-radius: 28px 28px 0 0; background: var(--surface-solid); transform: translateY(100%); transition: transform .32s var(--ease); }
+    .sheet-backdrop.open .sheet { transform: translateY(0); }
+    .handle { width: 42px; height: 5px; margin: 0 auto 17px; border-radius: 99px; background: var(--line); }
+    .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .sheet-head h3 { margin: 0; font-size: 18px; }
+    .plans { display: grid; gap: 9px; }
+    .plan { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; cursor: pointer; }
+    .plan.selected { border-color: var(--brand); background: var(--brand-soft); }
+    .plan input { position: absolute; opacity: 0; }
+    .plan strong { font-size: 13px; }
+    .plan p { margin: 2px 0 0; color: var(--text-3); font-size: 10px; }
+    .plan .price { font-size: 15px; font-weight: 820; }
+    .fine-print { margin: 12px 2px 15px; color: var(--text-3); font-size: 9px; line-height: 1.6; }
+
+    .toast { position: absolute; z-index: 100; left: 50%; bottom: 102px; max-width: calc(100% - 40px); padding: 11px 15px; border-radius: 14px; color: #fff; background: rgba(11,40,44,.92); box-shadow: var(--shadow-lg); font-size: 11px; transform: translate(-50%,16px); opacity: 0; visibility: hidden; transition: .22s var(--ease); }
+    .toast.show { transform: translate(-50%,0); opacity: 1; visibility: visible; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes radar { to { transform: rotate(360deg); } }
+    @keyframes pulse { 50% { transform: scale(1.3); opacity: .55; } }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+    @keyframes reqPulse { 70% { box-shadow: 0 0 0 8px rgba(10,166,151,0); } 100% { box-shadow: 0 0 0 0 rgba(10,166,151,0); } }
+
+    @media (max-width: 700px) {
+      .workspace { display: block; padding: 0; }
+      .project-panel { display: none; }
+      .prototype-comparison { width: 100%; display: block; }
+      .phone-panel { width: 100%; max-width: none; }
+      .phone-panel[data-locale="zh"] { display: none; }
+      .locale-label { display: none; }
+      .device { width: 100%; height: 100dvh; max-height: none; min-height: 640px; aspect-ratio: auto; border: 0; border-radius: 0; box-shadow: none; }
+      .doc-viewer { width: 100%; height: 100dvh; border: 0; border-radius: 0; }
+      .doc-page { padding: 28px 20px 40px; }
+      .device::before { top: 8px; }
+      .screen { padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right)); }
+      .bottom-nav { bottom: max(10px, env(safe-area-inset-bottom)); }
+    }
+
+    @media (max-height: 740px) and (min-width: 701px) {
+      .phone-panel { max-width: min(418px, calc((100dvh - 54px) * 0.469663)); }
+    }
+
+    @container (max-width: 340px) {
+      .screen { padding-left: 16px; padding-right: 16px; }
+      .screen[data-screen="profile"] { padding-top: 54px; }
+      .profile-head { padding: 8px 2px 12px; }
+      .profile-head .avatar { width: 48px; height: 48px; border-radius: 16px; }
+      .member-card { padding: 14px; }
+      .member-card p { margin: 4px 0 10px; }
+      .member-card button { min-height: 34px; }
+      .settings { margin-top: 10px; }
+      .setting-row { min-height: 50px; }
+      .vault-fab { right: 18px; bottom: 94px; width: 50px; height: 50px; }
+      .vault-fab .icon { width: 23px; height: 23px; }
+      .recharge-plan { grid-template-columns: 75px 1fr auto; gap: 8px; padding: 9px 10px; }
+      .recharge-bar { left: 10px; right: 10px; bottom: 9px; }
+      .home-head { padding-bottom: 20px; }
+      .hero-title { font-size: 30px; }
+      .hero-copy { font-size: 12px; }
+      .grid { gap: 9px; }
+      .feature-card { min-height: 148px; padding: 12px; }
+      .feature-card h3 { margin-top: 15px; font-size: 12px; }
+      .feature-card p { font-size: 9px; }
+      .feature-icon { width: 38px; height: 38px; border-radius: 13px; }
+      .feature-card.wide { min-height: 110px; }
+      .section-title { margin-top: 18px; }
+      .feature-card h3 { overflow-wrap: anywhere; }
+      .scan-result-item { position: relative; grid-template-columns: 36px minmax(0,1fr) 18px; gap: 7px; padding: 11px 9px; }
+      .device-kind { width: 36px; height: 36px; font-size: 8px; }
+      .device-kind img { width: 21px; height: 21px; }
+      .scan-fields { grid-template-columns: 48px minmax(0,1fr); gap: 3px 4px; font-size: 8px; }
+      .scan-item-side { align-self: stretch; align-content: end; }
+      .suspicious-tag { position: absolute; top: 8px; right: 8px; padding: 3px 5px; font-size: 7px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute">
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5.2-3.3 8.5-8 10-4.7-1.5-8-4.8-8-10V6l8-3Z"/><path d="m8.7 12 2.1 2.1 4.7-5"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="i-radar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="M12 12 18 7"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h5"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3zM9 3v15M15 6v15"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.6-4.2 3.3-6.5 8-6.5s7.4 2.3 8 6.5"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v10h-6v-6H9v6H3z"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5M12 17.5v.1"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18h11a4 4 0 0 0 .8-7.9A7 7 0 0 0 5.4 9.4 4.5 4.5 0 0 0 7 18Z"/><path d="M12 11v7m-3-3 3 3 3-3"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-hospital" viewBox="0 0 24 24"><path d="M5 21V4h14v17M3 21h18M9 8h6M12 5v6M8 21v-5h8v5"/></symbol>
+    <symbol id="i-police" viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5.2-3.3 8.5-8 10-4.7-1.5-8-4.8-8-10V6l8-3Z"/><path d="m12 8 1 2 2 .3-1.5 1.5.4 2.2-1.9-1-1.9 1 .4-2.2L9 10.3l2-.3 1-2Z"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 18h4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></symbol>
+    <symbol id="i-wave" viewBox="0 0 24 24"><path d="M4 12h2m3 0h2m3 0h2m3 0h1M7 8v8m6-11v14m5-11v8"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h4"/></symbol>
+    <symbol id="i-privacy" viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5.2-3.3 8.5-8 10-4.7-1.5-8-4.8-8-10V6l8-3Z"/><path d="M9 12a3 3 0 0 1 6 0v3H9v-3Z"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v.1"/></symbol>
+    <symbol id="i-exit" viewBox="0 0 24 24"><path d="M10 4H5v16h5M14 8l4 4-4 4M8 12h10"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 6.5h6l2 2h9v10.5h-17z"/><path d="M3.5 8.5h17"/></symbol>
+    <symbol id="i-page" viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="1.8"/><path d="M8 8h8M8 11.5h8M8 15h8"/></symbol>
+  </svg>
+
+  <main class="workspace">
+    <aside class="project-panel" aria-label="摄像头监测 iOS 项目目录">
+      <div class="project-header">
+        <span class="project-emblem" aria-hidden="true"><svg class="icon"><use href="#i-shield"/></svg></span>
+        <div class="project-name"><span class="project-kicker">Product map</span><div class="project-title">摄像头监测_iOS</div></div>
+        <div class="project-nav" aria-label="浏览历史">
+          <button type="button" data-tree-history="back" aria-label="上一个页面"><svg class="icon"><use href="#i-back"/></svg></button>
+          <button type="button" data-tree-history="forward" aria-label="下一个页面"><svg class="icon" style="transform:rotate(180deg)"><use href="#i-back"/></svg></button>
+        </div>
+      </div>
+      <div class="tree-search">
+        <svg class="icon"><use href="#i-search"/></svg>
+        <input id="treeSearch" type="search" placeholder="Search" aria-label="搜索项目页面">
+      </div>
+      <nav class="project-tree" id="projectTree" aria-label="原型页面目录">
+        <button class="tree-row" style="--depth:0" type="button" data-tree-toggle="requirements" aria-expanded="true"><span class="tree-caret">▾</span><svg class="icon tree-icon"><use href="#i-folder"/></svg><span class="tree-label">需求清单</span></button>
+        <div class="tree-group" data-tree-group="requirements">
+          <button class="tree-row" style="--depth:1" type="button" data-tree-doc="changelog"><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">更新日志</span></button>
+          <button class="tree-row" style="--depth:1" type="button" data-tree-doc="requirements-101"><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">需求列表v1.0.1</span></button>
+          <button class="tree-row" style="--depth:1" type="button" data-tree-doc="requirements-100"><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">需求列表v1.0.0</span></button>
+        </div>
+
+        <button class="tree-row" style="--depth:0" type="button" data-tree-toggle="version" aria-expanded="true"><span class="tree-caret">▾</span><svg class="icon tree-icon"><use href="#i-folder"/></svg><span class="tree-label">V1.0.0</span></button>
+        <div class="tree-group" data-tree-group="version">
+          <button class="tree-row" style="--depth:1" type="button" data-tree-toggle="flows" aria-expanded="true"><span class="tree-caret">▾</span><svg class="icon tree-icon"><use href="#i-folder"/></svg><span class="tree-label">流程图</span></button>
+          <div class="tree-group" data-tree-group="flows">
+            <button class="tree-row" style="--depth:2" type="button" data-tree-doc="flow-risk"><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">风险查询流程图</span></button>
+            <button class="tree-row" style="--depth:2" type="button" data-tree-doc="flow-restore"><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">恢复购买流程</span></button>
+            <button class="tree-row" style="--depth:2" type="button" data-tree-doc="flow-subscribe"><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">订阅会员流程</span></button>
+          </div>
+
+          <button class="tree-row" style="--depth:1" type="button" data-tree-toggle="prototype" aria-expanded="true"><span class="tree-caret">▾</span><svg class="icon tree-icon"><use href="#i-folder"/></svg><span class="tree-label">产品原型</span></button>
+          <div class="tree-group" data-tree-group="prototype">
+            <button class="tree-row" style="--depth:2" type="button" data-tree-note="商店图"><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">商店图</span></button>
+            <button class="tree-row selected" style="--depth:2" type="button" data-tree-go="home"><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">首页</span></button>
+            <button class="tree-row" style="--depth:3" type="button" data-tree-go="risk"><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">目的地风险查询</span></button>
+            <button class="tree-row" style="--depth:3" type="button" data-tree-go="vault"><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">电子档案备份</span></button>
+            <button class="tree-row" style="--depth:3" type="button" data-tree-go="resources"><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">附近资源查询</span></button>
+            <button class="tree-row" style="--depth:3" type="button" data-tree-go="scan"><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">住宿安全检测</span></button>
+            <button class="tree-row" style="--depth:3" type="button" data-tree-toggle="mine" aria-expanded="true"><span class="tree-caret">▾</span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">我的</span></button>
+            <div class="tree-group" data-tree-group="mine">
+              <button class="tree-row" style="--depth:4" type="button" data-tree-logout><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">注销账号</span></button>
+              <button class="tree-row" style="--depth:4" type="button" data-tree-member><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">订阅会员</span></button>
+            </div>
+            <button class="tree-row" style="--depth:2" type="button" data-tree-go="profile"><span class="tree-spacer"></span><svg class="icon tree-icon"><use href="#i-page"/></svg><span class="tree-label">我的</span></button>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <section class="doc-viewer" id="docViewer" aria-label="项目文档" aria-hidden="true">
+      <article class="doc-page" data-doc-page="changelog" hidden>
+        <p class="doc-kicker">Project history</p>
+        <h1>更新日志</h1>
+        <p class="doc-lead">摄像头监测 iOS 原型的版本调整与需求记录。</p>
+        <div class="doc-meta"><span>当前版本 1.2.5</span><span>最后更新 2026/7/1</span><span>12 条记录</span></div>
+        <div class="doc-table-wrap"><table class="doc-table">
+          <thead><tr><th>修改时间</th><th>版本</th><th>属性</th><th>描述</th><th>修改人</th></tr></thead>
+          <tbody>
+            <tr><td>2026/7/1</td><td class="version">1.2.5</td><td><span class="tag">新增</span></td><td>新增 1.2.5 需求清单：接入友盟行为分析、问题优化、快捷指令。</td><td>—</td></tr>
+            <tr><td>2026/6/11</td><td class="version">1.2.4</td><td><span class="tag">新增</span></td><td>取消档案中文件下载、查看、播放、保存、分享的会员限制。</td><td>左仕豪</td></tr>
+            <tr><td>2026/6/8</td><td class="version">1.2.3</td><td><span class="tag">修改</span></td><td>增加活动提示规则，根据用户充值状态与剩余次数控制拨号页提示语。</td><td>—</td></tr>
+            <tr><td>2026/6/2</td><td class="version">1.3.0</td><td><span class="tag">新增</span></td><td>新增 1.3.0 原型；增加直拨功能、通话币计费和充值。</td><td>—</td></tr>
+            <tr><td>2026/5/8</td><td class="version">1.2.0</td><td><span class="tag">新增</span></td><td>增加新用户引导绑定手机号并免费获得使用次数流程。</td><td>—</td></tr>
+            <tr><td>2026/4/8</td><td class="version">1.1.9</td><td><span class="tag">新增</span></td><td>录音转文字、引导页绑定手机号流程、友盟自定义事件。</td><td>—</td></tr>
+            <tr><td>2026/3/26</td><td class="version">1.1.8</td><td><span class="tag">修改</span></td><td>版本内容调整至 1.1.9；1.1.8 改为修复巨量引擎上报问题。</td><td>—</td></tr>
+            <tr><td>2026/2/6</td><td class="version">1.1.5</td><td><span class="tag">新增</span></td><td>档案未完成部分、修改来电录音、重做去电教程与会员流程。</td><td>钟华</td></tr>
+            <tr><td>2026/1/28</td><td class="version">1.1.4</td><td><span class="tag">修改</span></td><td>文字修改、主页会员、美洽问题、引导页及埋点调整。</td><td>—</td></tr>
+            <tr><td>2026/1/26</td><td class="version">1.1.3</td><td><span class="tag">修改</span></td><td>修改档案展示内容，增加手机号绑定流程。</td><td>—</td></tr>
+            <tr><td>2026/1/12</td><td class="version">1.1.2</td><td><span class="tag">优化</span></td><td>修复与优化 v1.1.1 版本。</td><td>—</td></tr>
+            <tr><td>2025/12/10</td><td class="version">1.0</td><td><span class="tag">新增</span></td><td>新增产品基础原型。</td><td>—</td></tr>
+          </tbody>
+        </table></div>
+      </article>
+
+      <article class="doc-page" data-doc-page="requirements-101" hidden>
+        <p class="doc-kicker">Product requirements</p><h1>需求列表 v1.0.1</h1>
+        <p class="doc-lead">APP-V1.0.1 · 安全监测能力与数据分析增量需求。</p>
+        <div class="doc-meta"><span>版本 1.0.1</span><span>8 项需求</span><span>增量版本</span></div>
+        <div class="doc-table-wrap"><table class="doc-table">
+          <thead><tr><th>序号</th><th>需求名称</th><th>需求描述</th><th>备注</th><th>快捷跳转</th></tr></thead>
+          <tbody>
+            <tr><td class="number">01</td><td><strong>美洽客服</strong></td><td>接入客服入口，为用户提供问题咨询与反馈通道。</td><td>新增</td><td class="link">查看原型</td></tr>
+            <tr><td class="number">02</td><td><strong>友盟统计</strong></td><td>接入用户行为统计，支持关键路径与事件分析。</td><td>新增</td><td class="link">点击跳转</td></tr>
+            <tr><td class="number">03</td><td><strong>安全监测－磁力检测</strong></td><td>通过磁力变化辅助识别异常设备。</td><td>监测能力</td><td>—</td></tr>
+            <tr><td class="number">04</td><td><strong>安全监测－红点检测</strong></td><td>识别镜头反射形成的可疑红点。</td><td>监测能力</td><td>—</td></tr>
+            <tr><td class="number">05</td><td><strong>安全监测－智能分析</strong></td><td>整合检测结果并输出风险判断与处理建议。</td><td>智能能力</td><td>—</td></tr>
+            <tr><td class="number">06</td><td><strong>安全监测－反光检测</strong></td><td>利用画面反光特征定位潜在隐藏镜头。</td><td>监测能力</td><td>—</td></tr>
+            <tr><td class="number">07</td><td><strong>安全监测－滤镜检测</strong></td><td>使用图像滤镜增强可疑光点的可见性。</td><td>监测能力</td><td>—</td></tr>
+            <tr><td class="number">08</td><td><strong>伪装来电</strong></td><td>提供紧急场景下的模拟来电能力。</td><td>安全工具</td><td>—</td></tr>
+          </tbody>
+        </table></div>
+      </article>
+
+      <article class="doc-page" data-doc-page="requirements-100" hidden>
+        <p class="doc-kicker">Product requirements</p><h1>需求列表 v1.0.0</h1>
+        <p class="doc-lead">APP-V1.0.0 · 摄像头监测与旅行安全产品的基础需求。</p>
+        <div class="doc-meta"><span>版本 1.0.0</span><span>11 项需求</span><span>基础版本</span></div>
+        <div class="doc-table-wrap"><table class="doc-table">
+          <thead><tr><th>序号</th><th>需求名称</th><th>需求描述</th><th>备注</th><th>快捷跳转</th></tr></thead>
+          <tbody>
+            <tr><td class="number">01</td><td><strong>注册登录</strong></td><td>无账号系统，ID 做位数处理。</td><td>基础能力</td><td>—</td></tr>
+            <tr><td class="number">02</td><td><strong>风险查询</strong></td><td>输入目的地，显示 AI 返回的风险内容。</td><td>核心功能</td><td class="link">点击跳转</td></tr>
+            <tr><td class="number">03</td><td><strong>证件备份</strong></td><td>电子备份身份证、护照、签证，本地存储。</td><td>本地加密</td><td>—</td></tr>
+            <tr><td class="number">04</td><td><strong>资源查询</strong></td><td>查询附近 20km 内的医院和警察局。</td><td>地图服务</td><td>—</td></tr>
+            <tr><td class="number">05</td><td><strong>安全监测－蓝牙监测</strong></td><td>扫描附近蓝牙设备并提示异常风险。</td><td>监测能力</td><td>—</td></tr>
+            <tr><td class="number">06</td><td><strong>安全监测－网络监测</strong></td><td>扫描当前网络中的可疑设备。</td><td>监测能力</td><td>—</td></tr>
+            <tr><td class="number">07</td><td><strong>充值</strong></td><td>采用追加到账模式。</td><td>商业化</td><td>—</td></tr>
+            <tr><td class="number">08</td><td><strong>免费试用</strong></td><td>提供首次体验权益与试用引导。</td><td>转化</td><td>—</td></tr>
+            <tr><td class="number">09</td><td><strong>我的</strong></td><td>个人信息、会员状态和设置入口。</td><td>账户</td><td>—</td></tr>
+            <tr><td class="number">10</td><td><strong>我的－绑定手机号</strong></td><td>绑定用户 ID 与 +86 手机号。</td><td>账户</td><td>—</td></tr>
+            <tr><td class="number">11</td><td><strong>我的－注销账号</strong></td><td>注销后解绑手机号，且无法恢复购买。</td><td>账户</td><td>—</td></tr>
+          </tbody>
+        </table></div>
+      </article>
+
+      <article class="doc-page" data-doc-page="flow-risk" hidden>
+        <p class="doc-kicker">Original Axure flow</p><h1>风险查询流程图</h1>
+        <p class="doc-lead">以下内容直接加载原项目 HTML，不改写节点、参数或提示词。</p>
+        <iframe class="flow-frame" title="风险查询流程图" src="../原型文件/风险查询流程图.html"></iframe>
+      </article>
+      <article class="doc-page" data-doc-page="flow-restore" hidden>
+        <p class="doc-kicker">Original Axure flow</p><h1>恢复购买流程</h1>
+        <p class="doc-lead">以下内容直接加载原项目 HTML，不改写判断条件和提示文案。</p>
+        <iframe class="flow-frame" title="恢复购买流程" src="../原型文件/恢复购买流程.html"></iframe>
+      </article>
+      <article class="doc-page" data-doc-page="flow-subscribe" hidden>
+        <p class="doc-kicker">Original Axure flow</p><h1>订阅会员流程</h1>
+        <p class="doc-lead">以下内容直接加载原项目 HTML，不改写套餐、支付和会员覆盖逻辑。</p>
+        <iframe class="flow-frame" title="订阅会员流程" src="../原型文件/订阅会员流程.html"></iframe>
+      </article>
+    </section>
+
+    <div class="requirement-modal" id="requirementModal" hidden>
+      <section class="requirement-dialog" role="dialog" aria-modal="true" aria-labelledby="requirementDialogTitle">
+        <header><h2 id="requirementDialogTitle">需求详情</h2><button class="icon-btn" type="button" data-close-requirement aria-label="关闭"><svg class="icon"><use href="#i-x"/></svg></button></header>
+        <div class="requirement-detail-grid" id="requirementDetailGrid"></div>
+        <p class="requirement-note">“原始描述”来自原 HTML；其他规则均标记为补充建议，可由你继续调整。</p>
+      </section>
+    </div>
+
+    <div class="prototype-comparison" id="prototypeComparison" aria-label="Safe Me bilingual prototype comparison">
+      <div class="phone-panel" data-locale="en">
+        <div class="locale-label">English prototype</div>
+    <section class="device" aria-label="Safe Me English mobile prototype">
+      <div class="status-bar" aria-hidden="true"><span>9:41</span><span class="status-icons">● ◔ <i class="status-pill"></i></span></div>
+
+      <div class="screen-stack" id="screenStack">
+        <article class="screen active" data-screen="home" aria-labelledby="home-title">
+          <header class="home-head">
+            <p class="eyebrow">Travel Safety</p>
+            <h1 class="sr-only" id="home-title" style="position:absolute;clip:rect(0,0,0,0)">Travel Safety</h1>
+          </header>
+
+          <div class="grid">
+            <button class="feature-card" type="button" data-go="risk" style="--card-color:#3f7cf4;--card-bg:#e8efff;--card-glow:#dfe9ff">
+              <span class="feature-icon"><svg class="icon"><use href="#i-globe"/></svg></span>
+              <h3>Destination<br>Risk Check</h3><p>Know local risks before departure</p>
+            </button>
+            <button class="feature-card" type="button" data-go="scan" style="--card-color:#08a8b5;--card-bg:#dff7f8">
+              <span class="feature-icon"><svg class="icon"><use href="#i-radar"/></svg></span>
+              <h3>Accommodation<br>Safety Monitor</h3><p>Scan suspicious Bluetooth and Wi-Fi devices</p>
+            </button>
+            <button class="feature-card" type="button" data-go="resources" style="--card-color:#d27a26;--card-bg:#fff1df;--card-glow:#fff0db">
+              <span class="feature-icon"><svg class="icon"><use href="#i-map"/></svg></span>
+              <h3>Nearby Assistance<br>Resources</h3><p>Hospitals, police stations and directions</p>
+            </button>
+            <button class="feature-card" type="button" data-go="vault" style="--card-color:#8b62da;--card-bg:#f0eaff;--card-glow:#eee6ff">
+              <span class="feature-icon"><svg class="icon"><use href="#i-file"/></svg></span>
+              <h3>Digital Document<br>Backup</h3><p>Keep essential documents encrypted locally</p>
+            </button>
+            <button class="feature-card wide" type="button" data-go="profile">
+              <span class="feature-icon"><svg class="icon"><use href="#i-shield"/></svg></span>
+              <span><h3>Your safety hub</h3><p>Manage membership, account and privacy</p></span>
+              <svg class="icon arrow"><use href="#i-arrow"/></svg>
+            </button>
+          </div>
+
+        </article>
+
+        <article class="screen subscreen" data-screen="risk" aria-labelledby="risk-title">
+          <div class="topbar"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="risk-title">Destination Risk</h2><span class="spacer"></span></div>
+          <p class="eyebrow">Plan with clarity</p><h2 class="hero-title" style="font-size:28px">Destination safety check</h2><p class="hero-copy">Review security, disaster, scam and cultural guidance.</p>
+          <form class="search-box" id="riskForm">
+            <label class="field"><span class="sr-only" style="position:absolute;clip:rect(0,0,0,0)">Destination</span><svg class="icon"><use href="#i-search"/></svg><input id="destination" autocomplete="off" placeholder="Enter a city or region"></label>
+            <button class="search-submit" type="submit" aria-label="Search"><svg class="icon"><use href="#i-arrow"/></svg></button>
+          </form>
+          <div class="section-title" style="margin-top:0"><h3>Recent searches</h3><button type="button" id="clearRecent">Clear</button></div>
+          <div class="chips" id="recentChips"><button class="chip" type="button">Iraq</button><button class="chip" type="button">Ethiopia</button><button class="chip" type="button">Paris</button></div>
+          <div class="safety-note" style="margin-top:14px"><div class="mini-icon"><svg class="icon icon-sm"><use href="#i-info"/></svg></div><div><strong>About this check</strong><p>Information is updated regularly and is for travel reference only. Follow official notices.</p></div></div>
+        </article>
+
+        <article class="screen subscreen" data-screen="scan" aria-labelledby="scan-title">
+          <div class="topbar"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="scan-title">Safety Monitor</h2><span class="spacer"></span></div>
+          <div class="scan-switch"><button class="active" type="button" data-scan-mode="Bluetooth">Bluetooth</button><button type="button" data-scan-mode="Wi-Fi">Wi-Fi</button></div>
+          <div class="radar-wrap" id="radarWrap"><div class="radar"><span class="radar-center"><svg class="icon icon-lg"><use href="#i-wave"/></svg></span><i class="blip one"></i><i class="blip two"></i></div></div>
+          <div class="scan-copy"><h3 id="scanHeading">Ready to scan</h3><p id="scanHint">Scan nearby Bluetooth devices for potential risks.</p></div>
+          <button class="primary-btn" id="scanButton" type="button" style="margin-top:22px">Start Bluetooth Scan</button>
+        </article>
+
+        <article class="screen subscreen" data-screen="scan-results" aria-labelledby="scan-results-title">
+          <div class="topbar"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="scan-results-title">Device Scan Result</h2><span class="spacer"></span></div>
+          <div class="scan-result-list">
+            <div class="scan-result-item"><span class="device-kind" aria-label="Phone"><img src="assets/icons/device-mobile.svg" alt=""></span><dl class="scan-fields"><dt>Device Name</dt><dd>F0529390-48FD-E534-…</dd><dt>Risk Level</dt><dd>Low</dd><dt>Distance</dt><dd>Far (&gt;10m)</dd></dl><span class="scan-item-side"><span class="suspicious-tag">Suspicious</span><svg class="icon"><use href="#i-arrow"/></svg></span></div>
+            <button class="scan-result-item" type="button" data-go="scan-detail"><span class="device-kind" aria-label="Computer"><img src="assets/icons/desktop.svg" alt=""></span><dl class="scan-fields"><dt>Device Name</dt><dd>F0529390-48FD-E534-…</dd><dt>Risk Level</dt><dd>High</dd><dt>Distance</dt><dd>Near (&lt;10m)</dd></dl><span class="scan-item-side"><span class="suspicious-tag">Suspicious</span><svg class="icon"><use href="#i-arrow"/></svg></span></button>
+            <div class="scan-result-item"><span class="device-kind" aria-label="General device"><img src="assets/icons/devices.svg" alt=""></span><dl class="scan-fields"><dt>Device Name</dt><dd>F0529390-48FD-E534-…</dd><dt>Risk Level</dt><dd>High</dd><dt>Distance</dt><dd>Near (&lt;10m)</dd></dl><span class="scan-item-side"><span class="suspicious-tag">Suspicious</span><svg class="icon"><use href="#i-arrow"/></svg></span></div>
+          </div>
+        </article>
+
+        <article class="screen subscreen" data-screen="scan-detail" aria-labelledby="scan-detail-title">
+          <div class="topbar"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="scan-detail-title">Device Distance Detection</h2><span class="spacer"></span></div>
+          <div class="distance-page"><h3>Device Type</h3><p class="distance-type">Computer</p><h3 style="margin-top:34px">Distance</h3><p class="distance-value">0.56m</p><div class="distance-animation"><span class="radar-center"><svg class="icon icon-lg"><use href="#i-wave"/></svg></span></div></div>
+        </article>
+
+        <article class="screen subscreen" data-screen="resources" aria-labelledby="resource-title">
+          <div class="topbar"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="resource-title">Nearby Assistance</h2><span class="spacer"></span></div>
+          <p class="eyebrow">Within 20 km</p><h2 class="hero-title" style="font-size:28px">Nearby assistance</h2><p class="hero-copy">Quickly find nearby hospitals and police stations.</p>
+          <div class="segmented"><button class="active" type="button" data-resource="hospital">Hospital</button><button type="button" data-resource="police">Police Station</button></div>
+          <div class="resource-list" id="resourceList"></div>
+        </article>
+
+        <article class="screen subscreen" data-screen="vault" aria-labelledby="vault-title">
+          <div class="topbar"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="vault-title">Digital Document Backup</h2><span class="spacer"></span></div>
+          <div class="privacy-card"><svg class="icon icon-lg"><use href="#i-lock"/></svg><div><h3>Encrypted local storage</h3><p>All credentials are stored only on this device and will be automatically erased when the app is uninstalled. Please exercise caution.</p></div></div>
+          <div class="section-title"><h3>My Documents</h3><span style="color:var(--text-3);font-size:10px">Tap to view full-size image</span></div>
+          <div class="docs" data-vault-list></div>
+        </article>
+
+        <article class="screen subscreen" data-screen="vault-add" aria-labelledby="vault-add-title">
+          <div class="topbar"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="vault-add-title">Add New Digital Record</h2><span class="spacer"></span></div>
+          <form class="vault-form" data-vault-form novalidate>
+            <div class="vault-form-section"><label for="vaultRecordName">Document Name</label><input class="vault-input" id="vaultRecordName" name="recordName" maxlength="50" autocomplete="off" placeholder="Enter"></div>
+            <div class="vault-form-section"><strong>Frequent-Use Records</strong><div class="chips"><button class="chip" type="button" data-record-preset="ID Card">ID Card</button><button class="chip" type="button" data-record-preset="Passport">Passport</button><button class="chip" type="button" data-record-preset="Visa">Visa</button></div></div>
+            <div class="vault-form-section"><strong>Upload Image</strong><div class="upload-grid" data-upload-grid><button class="upload-tile" type="button" data-action="choose-upload" aria-label="Upload Image"><svg class="icon"><use href="#i-plus"/></svg></button></div><p class="upload-meta">Max 5 images. 20 MB max per file. JPG, PNG only.</p></div>
+            <p class="vault-error" data-vault-error aria-live="polite"></p>
+            <button class="primary-btn" type="submit">Create</button>
+          </form>
+        </article>
+
+        <article class="screen subscreen" data-screen="vault-preview" aria-labelledby="vault-preview-title">
+          <div class="topbar"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="vault-preview-title">Picture</h2><span class="spacer"></span></div>
+          <div class="vault-preview"><div class="vault-preview-art"><svg class="icon"><use href="#i-file"/></svg></div><p data-preview-caption>Digital record image</p><button class="primary-btn" type="button" data-action="save-photo">Save to Photos</button></div>
+        </article>
+
+        <article class="screen subscreen recharge-screen" data-screen="recharge" aria-labelledby="recharge-title">
+          <div class="topbar"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="recharge-title">Subscribe</h2><span class="spacer"></span></div>
+          <div class="subscription-hero"><span class="subscription-logo"><svg class="icon"><use href="#i-shield"/></svg></span><p>One-stop Solution for Travel Safety</p></div>
+          <div class="recharge-plans">
+            <label class="recharge-plan selected"><input type="radio" name="recharge-plan" value="Weekly" checked><strong>Weekly Membership</strong><span>¥28 for the first week, then ¥48 per week thereafter.</span><b>¥28</b></label>
+            <label class="recharge-plan"><input type="radio" name="recharge-plan" value="Monthly"><strong>Monthly Membership</strong><span>¥28 for the first week, then ¥48 per week thereafter.</span><b>¥28</b></label>
+            <label class="recharge-plan"><input type="radio" name="recharge-plan" value="Quarterly"><strong>Quarterly Membership</strong><span>¥28 for the first week, then ¥48 per week thereafter.</span><b>¥28</b></label>
+            <label class="recharge-plan"><input type="radio" name="recharge-plan" value="Annual"><strong>Annual Membership</strong><span>¥28 for the first week, then ¥48 per week thereafter.</span><b>¥128</b></label>
+          </div>
+          <p class="recharge-restore">Payment completed but membership not activated. Please tap <button type="button" data-action="restore-purchases">Restore Purchases.</button></p>
+          <section class="subscription-notes"><h3>Subscription Notes:</h3><p>1. After you confirm purchase and complete payment, auto-renewal service (weekly/monthly/annual) will be activated via your Apple ID account. The system will charge your Apple ID within 24 hours before the end of each billing cycle. Once payment succeeds, your subscription will be automatically extended for one identical cycle.</p><p>2. If you fail to restore purchases, please verify that the Apple ID currently signed in to App Store matches the one used for purchase. Fully close and restart the app to try again, or go to the membership purchase page, select your previously purchased membership type and tap "Subscribe". This action restores purchases and no secondary charge will be made to your account.</p><p>3. If you wish to cancel your subscription, you must manually turn off auto-renewal at least 24 hours before the end of the current billing cycle in iPhone Settings &gt; [Your Name] &gt; Subscriptions. If you do not cancel actively, it will be deemed your consent for renewal, and the service for the next billing cycle will be automatically enabled.</p></section>
+        </article>
+
+        <article class="screen" data-screen="profile" aria-labelledby="profile-title">
+          <div class="profile-head"><span class="avatar"><svg class="icon icon-lg"><use href="#i-user"/></svg></span><div><h2 id="profile-title">Safe traveller</h2><p>ID 21121 · 159****2574</p></div></div>
+          <section class="member-card"><strong>Unlock Safe Me Plus</strong><p>Get complete scans, exclusive risk analysis and more member benefits.</p><button type="button" data-action="membership">Explore membership</button></section>
+          <div class="settings">
+            <button class="setting-row" type="button" data-action="privacy"><span class="mini-icon"><svg class="icon icon-sm"><use href="#i-privacy"/></svg></span><span>Privacy Policy</span><svg class="icon icon-sm"><use href="#i-arrow"/></svg></button>
+            <button class="setting-row" type="button" data-action="agreement"><span class="mini-icon"><svg class="icon icon-sm"><use href="#i-file"/></svg></span><span>User Agreement</span><svg class="icon icon-sm"><use href="#i-arrow"/></svg></button>
+            <button class="setting-row danger" type="button" data-action="logout"><span class="mini-icon" style="color:var(--danger);background:#ffebee"><svg class="icon icon-sm"><use href="#i-exit"/></svg></span><span>Delete Account</span><svg class="icon icon-sm"><use href="#i-arrow"/></svg></button>
+          </div>
+        </article>
+
+        <article class="screen subscreen" data-screen="account-delete-read" aria-labelledby="account-delete-read-title">
+          <div class="topbar"><button class="icon-btn" data-back type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="account-delete-read-title">Account Deletion</h2><span class="spacer"></span></div>
+          <section class="deletion-copy"><h3>Account Deletion Agreement</h3><p>Please read the following information carefully before continuing.</p><ol><li>You will no longer be able to log in to this account.</li><li>Account deletion is irreversible, and data cannot be recovered.</li><li>All information will be deleted in accordance with applicable laws and regulations.</li></ol></section>
+          <div class="delete-agree-wrap"><button class="primary-btn" type="button" data-action="delete-agree" disabled>Agree &amp; Continue <span class="delete-countdown" data-delete-countdown>10s</span></button></div>
+        </article>
+
+        <article class="screen subscreen deletion-confirm-screen" data-screen="account-delete-confirm" aria-labelledby="account-delete-confirm-title">
+          <div class="topbar"><button class="icon-btn" data-action="delete-cancel" type="button" aria-label="Back"><svg class="icon"><use href="#i-back"/></svg></button><h2 id="account-delete-confirm-title">Account Deletion</h2><span class="spacer"></span></div>
+          <section class="deletion-confirm-sheet"><div class="deletion-confirm-head"><span style="width:36px"></span><h3>Deletion Notes</h3><button class="icon-btn" type="button" data-action="delete-cancel" aria-label="Close"><svg class="icon"><use href="#i-x"/></svg></button></div><p class="deletion-warning"><strong>Please proceed with caution! After account deletion:</strong>1. You will no longer be able to log in to this account;<br>2. Account deletion is irreversible, and data cannot be recovered;<br>3. All information will be deleted in accordance with applicable laws and regulations.</p><button class="delete-now" type="button" data-action="delete-now">Delete Now</button></section>
+        </article>
+      </div>
+
+      <button class="vault-fab" type="button" data-action="add-doc" aria-label="Add New Digital Record" title="Add New Digital Record"><svg class="icon"><use href="#i-plus"/></svg></button>
+      <section class="recharge-bar" aria-label="Subscription checkout"><p class="recharge-trial">3-day free trial. Auto-renews at ¥48 per week after trial ends. Cancel anytime.</p><button class="recharge-subscribe" type="button" data-action="recharge-subscribe">Subscribe Now</button><p class="recharge-legal">By making payment, you agree to the Auto-Renewal Agreement, User Agreement and Privacy Policy.</p><div class="recharge-links"><button type="button" data-action="privacy">Privacy Policy</button><button type="button" data-action="agreement">User Agreement</button><button type="button" data-action="subscription-agreement">Subscription Agreement</button></div></section>
+
+      <nav class="bottom-nav" aria-label="Main navigation">
+        <button class="nav-item active" type="button" data-tab="home"><svg class="icon"><use href="#i-home"/></svg><span>Safe</span></button>
+        <button class="nav-item" type="button" data-tab="profile"><svg class="icon"><use href="#i-user"/></svg><span>Me</span></button>
+      </nav>
+
+      <div class="sheet-backdrop" id="membershipSheet" aria-hidden="true">
+        <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="membershipTitle">
+          <div class="handle"></div><div class="sheet-head"><h3 id="membershipTitle">Subscribe to Safe Me</h3><button class="icon-btn" type="button" data-action="close-sheet" aria-label="Close"><svg class="icon"><use href="#i-x"/></svg></button></div>
+          <div class="plans">
+            <label class="plan selected"><input type="radio" name="plan" value="Weekly" checked><span><strong>Weekly Membership</strong><p>3-day free trial, cancel anytime</p></span><span class="price">¥48</span></label>
+            <label class="plan"><input type="radio" name="plan" value="Monthly"><span><strong>Monthly Membership</strong><p>Best for short journeys</p></span><span class="price">¥128</span></label>
+            <label class="plan"><input type="radio" name="plan" value="Annual"><span><strong>Annual Membership</strong><p>Save 42% for year-round protection</p></span><span class="price">¥498</span></label>
+          </div>
+          <p class="fine-print">Your subscription renews automatically through Apple ID. Cancel anytime in iPhone Settings under Subscriptions.</p>
+          <button class="primary-btn" type="button" data-action="subscribe">Start free trial</button>
+        </section>
+      </div>
+
+      <div class="sheet-backdrop" data-upload-sheet aria-hidden="true">
+        <section class="sheet" role="dialog" aria-modal="true" aria-label="Choose image source">
+          <div class="handle"></div><div class="sheet-head"><h3>Upload Image</h3><button class="icon-btn" type="button" data-action="close-upload" aria-label="Close"><svg class="icon"><use href="#i-x"/></svg></button></div>
+          <div class="source-options"><button class="source-option" type="button" data-upload-source="photos"><svg class="icon"><use href="#i-file"/></svg>Import from Photos</button><button class="source-option" type="button" data-upload-source="camera"><svg class="icon"><use href="#i-radar"/></svg>Take Photo</button></div>
+          <input type="file" accept="image/jpeg,image/png" multiple data-file-photos hidden>
+          <input type="file" accept="image/jpeg,image/png" capture="environment" data-file-camera hidden>
+        </section>
+      </div>
+
+      <div class="vault-dialog-backdrop" data-delete-dialog aria-hidden="true"><section class="vault-dialog" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle"><h3 id="deleteTitle">Confirm Delete</h3><p>Are you sure you want to delete this digital record? Images cannot be recovered after deletion.</p><div class="vault-dialog-actions"><button class="secondary-btn" type="button" data-action="cancel-delete">Cancel</button><button class="danger-btn" type="button" data-action="confirm-delete">Confirm Delete</button></div></section></div>
+      <div class="vault-dialog-backdrop" data-rename-dialog aria-hidden="true"><section class="vault-dialog" role="dialog" aria-modal="true" aria-labelledby="renameTitle"><h3 id="renameTitle">Rename Record</h3><label for="renameRecordName" style="display:block;margin-bottom:8px;font-size:11px;font-weight:750">Record Name</label><input class="vault-input" id="renameRecordName" maxlength="50" placeholder="Enter record name"><div class="vault-dialog-actions"><button class="secondary-btn" type="button" data-action="cancel-rename">Cancel</button><button class="primary-btn" type="button" data-action="confirm-rename">Done</button></div></section></div>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </section>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      const comparison = document.getElementById('prototypeComparison');
+      const sourcePanel = comparison.querySelector('[data-locale="en"]');
+      const sourceDevice = sourcePanel.querySelector('.device');
+      const zhMap = {
+        'English prototype': '英文原型',
+        'Travel Safety': '旅行安全',
+        'Destination': '目的地',
+        'Risk Check': '风险查询',
+        'Know local risks before departure': '出发前了解当地风险',
+        'Accommodation': '住宿环境',
+        'Safety Monitor': '安全检测',
+        'Scan suspicious Bluetooth and Wi-Fi devices': '扫描可疑蓝牙与网络设备',
+        'Nearby Assistance': '附近求助',
+        'Resources': '资源查询',
+        'Hospitals, police stations and directions': '医院、警局与快速导航',
+        'Digital Document': '电子档案',
+        'Backup': '备份',
+        'Keep essential documents encrypted locally': '本地加密保存重要证件',
+        'Your safety hub': '你的安全中心',
+        'Manage membership, account and privacy': '管理会员、账号与隐私设置',
+        'Destination Risk': '目的地风险',
+        'Plan with clarity': '清晰规划',
+        'Destination safety check': '目的地安全查询',
+        'Review security, disaster, scam and cultural guidance.': '获取治安、灾害、诈骗和文化礼仪提示。',
+        'Recent searches': '最近查询',
+        'Clear': '清除',
+        'Preparing the latest risk information…': '正在整理最新风险信息…',
+        'Data updated daily · 08:00': '数据每日更新 · 08:00',
+        'LOW RISK': '低风险',
+        'Security level': '治安等级',
+        'Overall risk is low with limited violent crime. Watch your belongings in attractions, shopping areas and car parks.': '整体属于低风险，暴力犯罪较少。景区、商圈及停车场需注意财物安全。',
+        'Natural hazards': '自然灾害',
+        'The region is seismically active and may be affected by wildfire smoke in summer. Follow local alerts.': '地处地震活跃带，夏季可能受山火烟雾影响，请留意当地预警。',
+        'Scam and theft alert': '诈骗与侵财提示',
+        'Beware of distraction scams, pickpocketing and vehicle theft. Never leave valuables in your car.': '谨防诈骗、扒窃和车辆盗窃，请勿将贵重物品留在车内。',
+        'About this check': '查询须知',
+        'Information is updated regularly and is for travel reference only. Follow official notices.': '信息定时更新，仅作为出行参考，请以官方通知为准。',
+        'Bluetooth': '蓝牙',
+        'Wi-Fi': '无线网络',
+        'Ready to scan': '就绪，开始检测',
+        'Scan nearby Bluetooth devices for potential risks.': '扫描附近的蓝牙设备，识别潜在风险。',
+        'Start Bluetooth Scan': '开始蓝牙扫描',
+        'Unknown device · 0.56m away': '未知设备 · 距离 0.56 米',
+        'HIGH': '高风险',
+        'Device Scan Result': '设备扫描结果',
+        'Phone': '手机',
+        'Computer': '电脑',
+        'General': '通用',
+        'Device Name': '设备名称',
+        'Risk Level': '风险等级',
+        'Low': '低',
+        'High': '高',
+        'Distance': '距离',
+        'Far (>10m)': '远（>10米）',
+        'Near (<10m)': '近（<10米）',
+        'Suspicious': '可疑',
+        'Device Distance Detection': '设备距离探测',
+        'Device Type': '设备类型',
+        'Within 20 km': '20 公里范围内',
+        'Nearby assistance': '附近求助资源',
+        'Quickly find nearby hospitals and police stations.': '快速查找周边医院和警察局。',
+        'Hospital': '医院',
+        'Police Station': '警察局',
+        'Digital Document Backup': '电子档案备份',
+        'Encrypted local storage': '本地加密存储',
+        'All credentials are stored only on this device and will be automatically erased when the app is uninstalled. Please exercise caution.': '所有证件仅存储于本机，卸载本软件后自动清除，请谨慎操作。',
+        'My Documents': '我的档案',
+        'Manage': '管理',
+        'Tap to view full-size image': '点击查看大图',
+        'Delete': '删除',
+        'Rename': '重命名',
+        'Cancel': '取消',
+        'Add New Digital Record': '新增电子档案',
+        'Document Name': '档案名称',
+        'Frequent-Use Records': '常用档案',
+        'Upload Image': '上传图片',
+        'Max 5 images. 20 MB max per file. JPG, PNG only.': '最多 5 张图片，单张不超过 20 MB，仅支持 JPG、PNG。',
+        'Create': '创建',
+        'Picture': '图片',
+        'Digital record image': '电子档案图片',
+        'Save to Photos': '保存到相册',
+        'Import from Photos': '从相册导入',
+        'Take Photo': '拍照',
+        'Confirm Delete': '确认删除',
+        'Are you sure you want to delete this digital record? Images cannot be recovered after deletion.': '确定删除该电子档案吗？删除后的图片无法恢复。',
+        'Rename Record': '重命名档案',
+        'Record Name': '档案名称',
+        'Enter': '请输入',
+        'Done': '完成',
+        'ID Card': '身份证',
+        'Passport': '护照',
+        'Visa': '签证',
+        'Driver’s License': '驾驶证',
+        'Safe traveller': '安全旅行者',
+        'Unlock Safe Me Plus': '解锁 Safe Me Plus',
+        'Get complete scans, exclusive risk analysis and more member benefits.': '享受完整检测、专属风险分析与更多会员特权。',
+        'Explore membership': '查看会员权益',
+        'Privacy Policy': '隐私政策',
+        'User Agreement': '用户协议',
+        'Delete Account': '注销账号',
+        'Account Deletion': '注销账号',
+        'Account Deletion Agreement': '账号注销协议',
+        'Please read the following information carefully before continuing.': '继续前请仔细阅读以下内容。',
+        'You will no longer be able to log in to this account.': '您将无法再登录该账号。',
+        'Account deletion is irreversible, and data cannot be recovered.': '账号注销不可逆，数据无法恢复。',
+        'All information will be deleted in accordance with applicable laws and regulations.': '所有信息将依据适用法律法规予以删除。',
+        'Agree & Continue': '同意并继续',
+        'Deletion Notes': '注销须知',
+        'Please proceed with caution! After account deletion:': '请谨慎操作！账号注销后：',
+        '1. You will no longer be able to log in to this account;': '1. 您将无法再登录该账号；',
+        '2. Account deletion is irreversible, and data cannot be recovered;': '2. 账号注销不可逆，数据无法恢复；',
+        '3. All information will be deleted in accordance with applicable laws and regulations.': '3. 所有信息将依据适用法律法规予以删除。',
+        'Delete Now': '立即注销',
+        'Subscribe': '订阅会员',
+        'One-stop Solution for Travel Safety': '一站式旅行安全解决方案',
+        'Subscribe to Safe Me': '订阅 Safe Me',
+        'Weekly Membership': '周会员',
+        '¥28 for the first week, then ¥48 per week thereafter.': '首周 ¥28，之后每周 ¥48。',
+        '3-day free trial, cancel anytime': '免费试用 3 天，可随时取消',
+        'Monthly Membership': '月会员',
+        'Quarterly Membership': '季度会员',
+        'Best for short journeys': '适合短期旅行',
+        'Annual Membership': '年会员',
+        'Save 42% for year-round protection': '全年守护，节省 42%',
+        'Payment completed but membership not activated. Please tap': '已完成付款但会员尚未激活，请点击',
+        'Restore Purchases.': '恢复购买。',
+        'Subscription Notes:': '订阅说明：',
+        '1. After you confirm purchase and complete payment, auto-renewal service (weekly/monthly/annual) will be activated via your Apple ID account. The system will charge your Apple ID within 24 hours before the end of each billing cycle. Once payment succeeds, your subscription will be automatically extended for one identical cycle.': '1. 确认购买并完成付款后，将通过您的 Apple ID 账号开通自动续费服务（周/月/年）。系统将在每个计费周期结束前 24 小时内从 Apple ID 扣款；付款成功后，订阅将自动延长一个相同周期。',
+        '2. If you fail to restore purchases, please verify that the Apple ID currently signed in to App Store matches the one used for purchase. Fully close and restart the app to try again, or go to the membership purchase page, select your previously purchased membership type and tap "Subscribe". This action restores purchases and no secondary charge will be made to your account.': '2. 若恢复购买失败，请确认 App Store 当前登录的 Apple ID 与购买时一致。请完全关闭并重新启动应用后重试，或进入会员购买页，选择此前购买的会员类型并点击“订阅”。该操作用于恢复购买，不会对账号进行二次扣费。',
+        '3. If you wish to cancel your subscription, you must manually turn off auto-renewal at least 24 hours before the end of the current billing cycle in iPhone Settings > [Your Name] > Subscriptions. If you do not cancel actively, it will be deemed your consent for renewal, and the service for the next billing cycle will be automatically enabled.': '3. 如需取消订阅，须在当前计费周期结束至少 24 小时前，前往 iPhone 设置 > [您的姓名] > 订阅，手动关闭自动续费。若未主动取消，将视为同意续费，并自动开通下一计费周期的服务。',
+        '3-day free trial. Auto-renews at ¥48 per week after trial ends. Cancel anytime.': '免费试用 3 天，试用结束后按每周 ¥48 自动续费，可随时取消。',
+        'Subscribe Now': '立即订阅',
+        'By making payment, you agree to the Auto-Renewal Agreement, User Agreement and Privacy Policy.': '付款即表示您同意《自动续费协议》《用户协议》和《隐私政策》。',
+        'Subscription Agreement': '订阅协议',
+        'Your subscription renews automatically through Apple ID. Cancel anytime in iPhone Settings under Subscriptions.': '确认购买后将通过 Apple ID 自动续费，可随时在 iPhone 设置的“订阅”中取消。',
+        'Start free trial': '开始免费试用'
+      };
+      const zhPanel = sourcePanel.cloneNode(true);
+      zhPanel.dataset.locale = 'zh';
+      zhPanel.querySelector('.locale-label').textContent = '中文原型';
+      const zhDevice = zhPanel.querySelector('.device');
+      zhDevice.setAttribute('aria-label', 'Safe Me 中文移动端原型');
+      zhDevice.setAttribute('inert', '');
+      zhDevice.querySelectorAll('[id]').forEach(element => { element.id = `zh-${element.id}`; });
+      zhDevice.querySelectorAll('[aria-labelledby]').forEach(element => { element.setAttribute('aria-labelledby', `zh-${element.getAttribute('aria-labelledby')}`); });
+      zhDevice.querySelectorAll('input[name]').forEach(element => { element.name = `zh-${element.name}`; });
+      const walker = document.createTreeWalker(zhDevice, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) {
+        const value = walker.currentNode.nodeValue.trim();
+        if (zhMap[value]) walker.currentNode.nodeValue = walker.currentNode.nodeValue.replace(value, zhMap[value]);
+      }
+      zhDevice.querySelectorAll('[placeholder]').forEach(element => {
+        if (element.placeholder === 'Enter a city or region') element.placeholder = '输入城市或地区';
+        if (element.placeholder === 'Enter') element.placeholder = '请输入';
+        if (element.placeholder === 'Enter record name') element.placeholder = '请输入档案名称';
+      });
+      const ariaMap = { Back: '返回', Search: '查询', Close: '关闭', 'Main navigation': '主导航', Phone: '手机', Computer: '电脑', 'General device': '通用设备', 'Add New Digital Record': '新增电子档案', 'Subscription checkout': '订阅结算' };
+      zhDevice.querySelectorAll('[aria-label]').forEach(element => {
+        const value = element.getAttribute('aria-label');
+        if (ariaMap[value]) element.setAttribute('aria-label', ariaMap[value]);
+      });
+      comparison.appendChild(zhPanel);
+
+      const screens = [...document.querySelectorAll('.screen')];
+      const navItems = [...document.querySelectorAll('.nav-item')];
+      const treeRows = [...document.querySelectorAll('.tree-row')];
+      const device = sourceDevice;
+      const docViewer = document.getElementById('docViewer');
+      const docPages = [...document.querySelectorAll('[data-doc-page]')];
+      const toast = document.getElementById('toast');
+      const sheet = document.getElementById('membershipSheet');
+      const requirementModal = document.getElementById('requirementModal');
+      const requirementDetailGrid = document.getElementById('requirementDetailGrid');
+      const uploadSheet = sourceDevice.querySelector('[data-upload-sheet]');
+      const deleteDialog = sourceDevice.querySelector('[data-delete-dialog]');
+      const renameDialog = sourceDevice.querySelector('[data-rename-dialog]');
+      const vaultForm = sourceDevice.querySelector('[data-vault-form]');
+      const vaultNameInput = sourceDevice.querySelector('#vaultRecordName');
+      const renameInput = sourceDevice.querySelector('#renameRecordName');
+      const vaultError = sourceDevice.querySelector('[data-vault-error]');
+      let current = 'home';
+      let previous = 'home';
+      let toastTimer;
+      let activeRecordId = null;
+      let pendingRecordId = null;
+      let selectedFiles = [];
+      let deletionTimer;
+      let vaultRecords = [
+        { id: 'id-card', name: 'ID Card', count: 2, icon: 'card', color: '#08a8b5', bg: '#dff7f8' },
+        { id: 'passport', name: 'Passport', count: 5, icon: 'globe', color: '#3f7cf4', bg: '#e8efff' },
+        { id: 'visa', name: 'Visa', count: 2, icon: 'file', color: '#8b62da', bg: '#f0eaff' },
+        { id: 'license', name: 'Driver’s License', count: 2, icon: 'card', color: '#d27a26', bg: '#fff1df' }
+      ];
+
+      const resourceData = {
+        hospital: [
+          ['Shanghai United Family Hospital', '699 Pingtang Rd, Changning', '2.4 km'],
+          ['Huashan Hospital', '12 Wulumuqi Middle Rd', '3.8 km'],
+          ['Ruijin Hospital', '197 Ruijin 2nd Rd', '5.1 km']
+        ],
+        police: [
+          ['Xinhua Road Police Station', '333 Fanyu Rd, Changning', '1.7 km'],
+          ['Jiangsu Road Police Station', '99 Yuyuan Rd', '2.9 km'],
+          ['Hunan Road Police Station', '3 Fenyang Rd', '4.2 km']
+        ]
+      };
+
+      function requirementRules(name, original) {
+        const common = {
+          source: '原文件未指定。补充建议：由对应系统能力或本地数据提供，并在实现前确认接口字段。',
+          pre: '补充建议：用户已进入对应功能，所需系统权限与网络状态可用。',
+          post: '补充建议：成功后刷新当前页面；失败时保留原状态并展示可恢复的错误提示。',
+          limit: '原文件未指定。补充建议：首屏最多展示 20 条，超过后分页或分批加载。',
+          sort: '原文件未指定。补充建议：优先按风险或相关度，其次按更新时间倒序。'
+        };
+        if (name.includes('风险查询')) return { source: '原文件：Doubao-Seed-2.0-mini 模型返回固定 JSON 字段。', pre: '原文件：用户输入目的地并点击 Search；地点不可为空。', post: '原文件：客户端根据模型返回标签生成内容介绍页；失败时允许重新生成。', limit: '原文件：每次查询生成 1 组目的地结果。', sort: '不适用；字段顺序按 security_level、natural_disaster_tip、fraud_violence_tip、culture_taboo。' };
+        if (name.includes('证件备份')) return { source: '原文件：身份证、护照、签证图片，本地存储。', pre: '原文件：档案名称必填，支持中英文和数字，长度 1–50 字符；至少上传 1 张图片。', post: '原文件：创建后返回档案列表；支持查看大图、保存到相册、删除和重命名。', limit: '原文件：单个档案最多 5 张图片，每张不超过 20 MB，仅支持 JPG、PNG。', sort: '补充建议：按最近更新时间倒序，证件类型保持身份证、护照、签证顺序。' };
+        if (name.includes('资源查询')) return { source: '原文件：系统定位及地图中的医院、警察局数据。', pre: '原文件：查询用户附近 20km；补充建议：需要定位权限。', post: '补充建议：返回资源名称、地址、距离及导航入口。', limit: '原文件未指定。补充建议：医院和警察局分别最多显示 20 条。', sort: '补充建议：默认按直线距离由近到远排序。' };
+        if (name.includes('蓝牙') || name.includes('网络监测')) return { source: name.includes('蓝牙') ? '原文件：附近蓝牙设备扫描结果。' : '原文件：当前 Wi-Fi 网络内设备扫描结果。', pre: '补充建议：用户开启对应系统能力并授予扫描权限。', post: '原文件：进入 Device Scan Result，展示设备名称、风险等级、距离和 Suspicious 标签。', limit: '原文件未规定上限；扫描页示例显示 40 devices detected。', sort: '补充建议：High 风险优先，其次按距离由近到远。' };
+        if (name.includes('磁力') || name.includes('红点') || name.includes('反光') || name.includes('滤镜') || name.includes('智能分析')) return { source: '原文件仅提供需求名称。补充建议：使用设备传感器或摄像头检测结果。', pre: '补充建议：用户授予传感器或摄像头权限，并主动开始检测。', post: '补充建议：输出检测状态、风险结论和重新检测入口。', limit: '补充建议：单次检测只保留 1 份当前结果。', sort: '不适用；多项发现时建议按风险等级降序。' };
+        if (name.includes('注销账号')) return { source: '原文件：账号注销记录、手机号绑定状态及 Apple ID 购买记录。', pre: '原文件：用户进入“我的－注销账号”并确认操作。', post: '原文件：解绑手机号，注销后无法恢复购买。', limit: '单次仅处理当前账户。', sort: '不适用。' };
+        if (name.includes('充值') || name.includes('免费试用')) return { source: '原文件：Apple 支付结果与会员套餐数据。', pre: '补充建议：用户已选择有效套餐，Apple ID 支付能力可用。', post: '原文件：支付成功后更新会员套餐数据并刷新页面；取消或失败显示 Toast。', limit: '补充建议：同一账户同时只保留 1 个生效套餐，新套餐覆盖旧套餐。', sort: '补充建议：套餐按周期从短到长排列。' };
+        if (name.includes('友盟')) return { source: '原文件：友盟统计。', pre: '补充建议：用户已同意隐私政策，统计 SDK 初始化成功。', post: '补充建议：事件进入统计队列，失败时不阻断主流程。', limit: '补充建议：重复高频事件需节流，敏感信息不得上报。', sort: '后台查询建议按事件时间倒序。' };
+        if (name.includes('美洽')) return { source: '原文件：美洽客服。', pre: '补充建议：网络可用且客服 SDK 初始化成功。', post: '补充建议：打开客服会话并保留最近咨询上下文。', limit: '补充建议：会话列表首屏 20 条消息。', sort: '按消息时间正序，会话按最近回复时间倒序。' };
+        return common;
+      }
+
+      document.querySelectorAll('[data-doc-page^="requirements-"]').forEach(page => {
+        const version = page.dataset.docPage.endsWith('101') ? 'v1.0.1' : 'v1.0.0';
+        page.querySelectorAll('tbody tr').forEach((row, index) => {
+          const cells = [...row.cells];
+          const name = cells[1]?.textContent.trim() || `需求 ${index + 1}`;
+          const original = cells[2]?.textContent.trim() || '原文件未填写需求描述。';
+          const key = `${page.dataset.docPage}-${index + 1}`;
+          row.dataset.requirementKey = key;
+          row.dataset.requirementName = name;
+          row.dataset.requirementVersion = version;
+          row.dataset.requirementOriginal = original;
+          const button = document.createElement('button');
+          button.className = 'req-dot';
+          button.type = 'button';
+          button.dataset.reqKey = key;
+          button.setAttribute('aria-label', `查看 ${name} 详细说明`);
+          button.textContent = 'i';
+          cells.at(-1)?.appendChild(button);
+        });
+      });
+
+      function openRequirementDialog(row) {
+        const name = row.dataset.requirementName;
+        const rules = requirementRules(name, row.dataset.requirementOriginal);
+        document.getElementById('requirementDialogTitle').textContent = `${row.dataset.requirementVersion} · ${name}`;
+        const details = [
+          ['原始描述', row.dataset.requirementOriginal],
+          ['数据来源', rules.source],
+          ['前置条件', rules.pre],
+          ['后置结果', rules.post],
+          ['显示数量限制', rules.limit],
+          ['排序规则', rules.sort]
+        ];
+        requirementDetailGrid.innerHTML = details.map(([label, value]) => `<div class="requirement-detail"><strong>${label}</strong><p>${value}</p></div>`).join('');
+        requirementModal.hidden = false;
+        requirementModal.querySelector('[data-close-requirement]').focus();
+      }
+
+      function icon(name) {
+        return `<svg class="icon"><use href="#i-${name}"/></svg>`;
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
+      }
+
+      function recordName(record, locale) {
+        if (locale !== 'zh') return record.name;
+        return ({ 'ID Card': '身份证', 'Passport': '护照', 'Visa': '签证', 'Driver’s License': '驾驶证' })[record.name] || record.name;
+      }
+
+      function renderVaults() {
+        [[sourceDevice, 'en'], [zhDevice, 'zh']].forEach(([root, locale]) => {
+          const list = root.querySelector('[data-vault-list]');
+          if (!list) return;
+          list.innerHTML = vaultRecords.map(record => {
+            const name = escapeHtml(recordName(record, locale));
+            const isActive = activeRecordId === record.id;
+            const actions = isActive
+              ? `<button class="doc-action danger" type="button" data-record-delete="${record.id}">${locale === 'zh' ? '删除' : 'Delete'}</button><button class="doc-action" type="button" data-record-rename="${record.id}">${locale === 'zh' ? '重命名' : 'Rename'}</button><button class="doc-action" type="button" data-record-cancel>${locale === 'zh' ? '取消' : 'Cancel'}</button>`
+              : `<button class="doc-manage" type="button" data-record-manage="${record.id}">${locale === 'zh' ? '管理' : 'Manage'}</button>`;
+            const thumbs = Array.from({ length: Math.max(1, Math.min(record.count, 5)) }, (_, index) => {
+              const image = record.images?.[index];
+              return `<button class="doc-thumb" type="button" data-doc-preview="${record.id}" aria-label="${locale === 'zh' ? '查看' : 'View'} ${name} ${index + 1}" style="--doc-color:${record.color};--doc-bg:${record.bg}">${image ? `<img src="${image.url}" alt="">` : icon(record.icon)}</button>`;
+            }).join('');
+            return `<article class="doc-record" data-record-id="${record.id}"><div class="doc-record-head"><h4>${name}</h4>${actions}</div><div class="doc-thumbs">${thumbs}</div>${isActive ? `<p class="manage-hint">${locale === 'zh' ? '请选择删除、重命名或取消。' : 'Choose Delete, Rename, or Cancel.'}</p>` : ''}</article>`;
+          }).join('');
+        });
+      }
+
+      function setOverlay(element, open) {
+        element.classList.toggle('open', open);
+        element.setAttribute('aria-hidden', String(!open));
+      }
+
+      function resetVaultForm() {
+        vaultForm.reset();
+        selectedFiles.forEach(file => { if (file.url) URL.revokeObjectURL(file.url); });
+        selectedFiles = [];
+        vaultError.textContent = '';
+        renderUploads();
+      }
+
+      function renderUploads() {
+        const grid = sourceDevice.querySelector('[data-upload-grid]');
+        grid.innerHTML = selectedFiles.map(file => `<span><span class="upload-tile"><img src="${file.url}" alt=""></span><span class="upload-name">${escapeHtml(file.name)}</span></span>`).join('') + (selectedFiles.length < 5 ? `<button class="upload-tile" type="button" data-action="choose-upload" aria-label="Upload Image">${icon('plus')}</button>` : '');
+      }
+
+      function closeVaultDialogs() {
+        setOverlay(uploadSheet, false);
+        setOverlay(deleteDialog, false);
+        setOverlay(renameDialog, false);
+      }
+
+      function startDeletionCountdown() {
+        clearInterval(deletionTimer);
+        let seconds = 10;
+        const buttons = [...document.querySelectorAll('[data-action="delete-agree"]')];
+        const counters = [...document.querySelectorAll('[data-delete-countdown]')];
+        buttons.forEach(button => { button.disabled = true; });
+        counters.forEach(counter => { counter.textContent = `${seconds}s`; });
+        deletionTimer = setInterval(() => {
+          seconds -= 1;
+          counters.forEach(counter => { counter.textContent = seconds > 0 ? `${seconds}s` : ''; });
+          if (seconds <= 0) {
+            clearInterval(deletionTimer);
+            buttons.forEach(button => { button.disabled = false; });
+          }
+        }, 1000);
+      }
+
+      function navigate(name, push = true) {
+        const target = screens.find(s => s.dataset.screen === name);
+        if (!target) return;
+        comparison.classList.remove('is-hidden');
+        comparison.removeAttribute('aria-hidden');
+        docViewer.classList.remove('active');
+        docViewer.setAttribute('aria-hidden', 'true');
+        if (push && name !== current) previous = current;
+        current = name;
+        document.querySelectorAll('.device').forEach(item => {
+          item.classList.toggle('deletion-flow', name.startsWith('account-delete'));
+          item.classList.toggle('vault-active', name === 'vault');
+          item.classList.toggle('recharge-active', name === 'recharge');
+        });
+        screens.forEach(s => s.classList.toggle('active', s.dataset.screen === name));
+        navItems.forEach(n => n.classList.toggle('active', n.dataset.tab === name));
+        if (name !== 'home' && name !== 'profile') navItems.forEach(n => n.classList.remove('active'));
+        target.scrollTop = 0;
+        history.replaceState(null, '', `#${name}`);
+        if (name === 'account-delete-read') startDeletionCountdown();
+        else clearInterval(deletionTimer);
+        requestAnimationFrame(() => target.querySelector('h1,h2')?.focus?.({ preventScroll: true }));
+      }
+
+      function showDocument(name) {
+        const target = docPages.find(page => page.dataset.docPage === name);
+        if (!target) return;
+        setSheet(false);
+        comparison.classList.add('is-hidden');
+        comparison.setAttribute('aria-hidden', 'true');
+        docViewer.classList.add('active');
+        docViewer.setAttribute('aria-hidden', 'false');
+        docPages.forEach(page => { page.hidden = page !== target; });
+        target.scrollTop = 0;
+        history.replaceState(null, '', `#doc-${name}`);
+        requestAnimationFrame(() => target.querySelector('h1')?.focus?.({ preventScroll: true }));
+      }
+
+      function selectTreeRow(row) {
+        treeRows.forEach(item => item.classList.toggle('selected', item === row));
+        row?.scrollIntoView({ block: 'nearest' });
+      }
+
+      function showToast(message) {
+        clearTimeout(toastTimer);
+        toast.textContent = message;
+        toast.classList.add('show');
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+      }
+
+      function setSheet(open) {
+        sheet.classList.toggle('open', open);
+        sheet.setAttribute('aria-hidden', String(!open));
+        if (open) sheet.querySelector('[data-action="close-sheet"]').focus();
+      }
+
+      function renderResources(type) {
+        const list = document.getElementById('resourceList');
+        const isHospital = type === 'hospital';
+        list.innerHTML = resourceData[type].map(([name, address, distance]) => `
+          <article class="resource-card">
+            <span class="feature-icon" style="--card-color:${isHospital ? '#d95c6b' : '#3f7cf4'};--card-bg:${isHospital ? '#ffebee' : '#e8efff'}">${icon(isHospital ? 'hospital' : 'police')}</span>
+            <div><h4>${name}</h4><p>${address}</p><div class="distance">${distance} away</div></div>
+            <button class="nav-btn" type="button" aria-label="Navigate to ${name}" data-nav-name="${name}">${icon('map')}</button>
+          </article>`).join('');
+      }
+
+      function renderChineseResources(type) {
+        const list = zhDevice.querySelector('#zh-resourceList');
+        const isHospital = type === 'hospital';
+        const data = isHospital ? [
+          ['上海和睦家医院', '长宁区平塘路 699 号', '2.4 公里'],
+          ['华山医院', '乌鲁木齐中路 12 号', '3.8 公里'],
+          ['瑞金医院', '瑞金二路 197 号', '5.1 公里']
+        ] : [
+          ['新华路派出所', '长宁区番禺路 333 号', '1.7 公里'],
+          ['江苏路派出所', '愚园路 99 号', '2.9 公里'],
+          ['湖南路派出所', '汾阳路 3 号', '4.2 公里']
+        ];
+        list.innerHTML = data.map(([name, address, distance]) => `
+          <article class="resource-card">
+            <span class="feature-icon" style="--card-color:${isHospital ? '#d95c6b' : '#3f7cf4'};--card-bg:${isHospital ? '#ffebee' : '#e8efff'}">${icon(isHospital ? 'hospital' : 'police')}</span>
+            <div><h4>${name}</h4><p>${address}</p><div class="distance">距离 ${distance}</div></div>
+            <button class="nav-btn" type="button" aria-label="导航前往 ${name}">${icon('map')}</button>
+          </article>`).join('');
+      }
+
+      document.addEventListener('click', (event) => {
+        const go = event.target.closest('[data-go]');
+        const back = event.target.closest('[data-back]');
+        const tab = event.target.closest('[data-tab]');
+        const action = event.target.closest('[data-action]');
+        const recent = event.target.closest('.chip');
+        const nav = event.target.closest('[data-nav-name]');
+        const doc = event.target.closest('[data-doc]');
+        const preset = event.target.closest('[data-record-preset]');
+        const recordManage = event.target.closest('[data-record-manage]');
+        const recordCancel = event.target.closest('[data-record-cancel]');
+        const recordDelete = event.target.closest('[data-record-delete]');
+        const recordRename = event.target.closest('[data-record-rename]');
+        const recordPreview = event.target.closest('[data-doc-preview]');
+        const uploadSource = event.target.closest('[data-upload-source]');
+        const treeGo = event.target.closest('[data-tree-go]');
+        const treeDoc = event.target.closest('[data-tree-doc]');
+        const treeToggle = event.target.closest('[data-tree-toggle]');
+        const treeNote = event.target.closest('[data-tree-note]');
+        const treeMember = event.target.closest('[data-tree-member]');
+        const treeLogout = event.target.closest('[data-tree-logout]');
+        const treeHistory = event.target.closest('[data-tree-history]');
+        const reqTrigger = event.target.closest('[data-req-key]');
+        const reqClose = event.target.closest('[data-close-requirement]');
+        if (go) navigate(go.dataset.go);
+        if (tab) navigate(tab.dataset.tab);
+        if (back) navigate(previous === current ? 'home' : previous, false);
+        if (treeGo) { navigate(treeGo.dataset.treeGo); selectTreeRow(treeGo); }
+        if (treeDoc) { showDocument(treeDoc.dataset.treeDoc); selectTreeRow(treeDoc); }
+        if (treeToggle) {
+          const group = document.querySelector(`[data-tree-group="${treeToggle.dataset.treeToggle}"]`);
+          const expanded = treeToggle.getAttribute('aria-expanded') !== 'false';
+          treeToggle.setAttribute('aria-expanded', String(!expanded));
+          if (group) group.hidden = expanded;
+        }
+        if (treeNote) { selectTreeRow(treeNote); showToast(`${treeNote.dataset.treeNote} · document page`); }
+        if (treeMember) { navigate('recharge'); selectTreeRow(treeMember); }
+        if (treeLogout) { navigate('account-delete-read'); selectTreeRow(treeLogout); }
+        if (treeHistory) {
+          if (treeHistory.dataset.treeHistory === 'back') navigate(previous === current ? 'home' : previous, false);
+          else showToast('You are already on the latest page.');
+        }
+        if (reqTrigger) openRequirementDialog(reqTrigger.closest('tr'));
+        if (reqClose) requirementModal.hidden = true;
+        if (recent) { document.getElementById('destination').value = recent.textContent; document.getElementById('destination').focus(); }
+        if (nav) showToast(`Opening Apple Maps: ${nav.dataset.navName}`);
+        if (doc) showToast(`${doc.dataset.doc} · locally encrypted file`);
+        if (preset) { vaultNameInput.value = preset.dataset.recordPreset; vaultNameInput.focus(); }
+        if (recordManage) { activeRecordId = recordManage.dataset.recordManage; renderVaults(); }
+        if (recordCancel) { activeRecordId = null; renderVaults(); }
+        if (recordDelete) { pendingRecordId = recordDelete.dataset.recordDelete; setOverlay(deleteDialog, true); deleteDialog.querySelector('[data-action="cancel-delete"]').focus(); }
+        if (recordRename) {
+          pendingRecordId = recordRename.dataset.recordRename;
+          renameInput.value = vaultRecords.find(record => record.id === pendingRecordId)?.name || '';
+          setOverlay(renameDialog, true);
+          renameInput.focus();
+          renameInput.select();
+        }
+        if (recordPreview) {
+          const record = vaultRecords.find(item => item.id === recordPreview.dataset.docPreview);
+          document.querySelectorAll('[data-preview-caption]').forEach((caption, index) => { caption.textContent = index === 0 ? `${record?.name || 'Digital record'} image` : `${recordName(record || { name: '电子档案' }, 'zh')}图片`; });
+          navigate('vault-preview');
+        }
+        if (uploadSource) {
+          const input = uploadSource.dataset.uploadSource === 'camera' ? sourceDevice.querySelector('[data-file-camera]') : sourceDevice.querySelector('[data-file-photos]');
+          setOverlay(uploadSheet, false);
+          input.click();
+        }
+        if (!action) return;
+        const type = action.dataset.action;
+        if (type === 'membership') navigate('recharge');
+        if (type === 'close-sheet') setSheet(false);
+        if (type === 'subscribe') { setSheet(false); showToast('Purchase flow ready. This prototype will not charge you.'); }
+        if (type === 'recharge-subscribe') showToast('Subscription purchase flow ready. This prototype will not charge you.');
+        if (type === 'restore-purchases') showToast('Restore Purchases is ready.');
+        if (type === 'subscription-agreement') showToast('Subscription Agreement');
+        if (type === 'add-doc') { resetVaultForm(); navigate('vault-add'); }
+        if (type === 'choose-upload') setOverlay(uploadSheet, true);
+        if (type === 'close-upload') setOverlay(uploadSheet, false);
+        if (type === 'save-photo') showToast('Saved to Photos.');
+        if (type === 'cancel-delete') { pendingRecordId = null; setOverlay(deleteDialog, false); }
+        if (type === 'confirm-delete') {
+          vaultRecords = vaultRecords.filter(record => record.id !== pendingRecordId);
+          pendingRecordId = null; activeRecordId = null; setOverlay(deleteDialog, false); renderVaults(); showToast('Digital record deleted.');
+        }
+        if (type === 'cancel-rename') { pendingRecordId = null; setOverlay(renameDialog, false); }
+        if (type === 'confirm-rename') {
+          const value = renameInput.value.trim();
+          if (!value || value.length > 50 || !/^[\p{L}\p{N}\s]+$/u.test(value)) { showToast('Use 1–50 Chinese or English letters and numbers.'); return; }
+          const record = vaultRecords.find(item => item.id === pendingRecordId);
+          if (record) record.name = value;
+          pendingRecordId = null; activeRecordId = null; setOverlay(renameDialog, false); renderVaults(); showToast('Record renamed.');
+        }
+        if (type === 'privacy' || type === 'agreement') showToast(type === 'privacy' ? 'Privacy Policy' : 'User Agreement');
+        if (type === 'logout') navigate('account-delete-read');
+        if (type === 'delete-agree' && !action.disabled) navigate('account-delete-confirm');
+        if (type === 'delete-cancel') navigate('profile', false);
+        if (type === 'delete-now') {
+          showToast('Account deleted. Phone number unlinked; purchase restoration is no longer available.');
+          setTimeout(() => navigate('home', false), 1200);
+        }
+      });
+
+      document.getElementById('riskForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const value = document.getElementById('destination').value.trim();
+        if (!value) { showToast('Enter a destination.'); return; }
+        showToast('No sample risk result is included. The original flow expects a model response.');
+      });
+
+      document.getElementById('clearRecent').addEventListener('click', () => { document.getElementById('recentChips').innerHTML = '<span style="color:var(--text-3);font-size:11px">No recent searches</span>'; });
+
+      sourceDevice.querySelectorAll('[data-file-photos], [data-file-camera]').forEach(input => input.addEventListener('change', () => {
+        const files = [...input.files];
+        const valid = files.filter(file => ['image/jpeg', 'image/png'].includes(file.type) && file.size <= 20 * 1024 * 1024);
+        if (valid.length !== files.length) vaultError.textContent = 'Only JPG or PNG files up to 20 MB can be uploaded.';
+        else vaultError.textContent = '';
+        valid.slice(0, 5 - selectedFiles.length).forEach(file => selectedFiles.push({ name: file.name, url: URL.createObjectURL(file) }));
+        input.value = '';
+        renderUploads();
+      }));
+
+      vaultForm.addEventListener('submit', event => {
+        event.preventDefault();
+        const name = vaultNameInput.value.trim();
+        if (!name || name.length > 50 || !/^[\p{L}\p{N}\s]+$/u.test(name)) { vaultError.textContent = 'Document name is required. Use 1–50 Chinese or English letters and numbers.'; vaultNameInput.focus(); return; }
+        if (!selectedFiles.length) { vaultError.textContent = 'Upload at least one image.'; return; }
+        vaultRecords.push({ id: `record-${Date.now()}`, name, count: selectedFiles.length, icon: 'file', color: '#08a8b5', bg: '#dff7f8', images: selectedFiles });
+        selectedFiles = [];
+        renderVaults();
+        navigate('vault', false);
+        showToast('Digital record created.');
+      });
+
+      document.querySelectorAll('[data-scan-mode]').forEach(button => button.addEventListener('click', () => {
+        document.querySelectorAll('[data-scan-mode]').forEach(b => b.classList.toggle('active', b === button));
+        document.getElementById('scanHint').textContent = button.dataset.scanMode === 'Wi-Fi' ? 'Scan the current Wi-Fi network for suspicious devices.' : 'Scan nearby Bluetooth devices for potential risks.';
+        document.getElementById('scanButton').textContent = `Start ${button.dataset.scanMode} Scan`;
+      }));
+
+      document.getElementById('scanButton').addEventListener('click', () => {
+        const button = document.getElementById('scanButton');
+        const wrap = document.getElementById('radarWrap');
+        const mode = document.querySelector('[data-scan-mode].active').dataset.scanMode;
+        wrap.classList.add('scanning'); button.disabled = true;
+        document.getElementById('scanHeading').textContent = 'Scanning… 28% completed';
+        button.textContent = 'Scanning nearby devices…';
+        setTimeout(() => { wrap.classList.remove('scanning'); button.disabled = false; button.textContent = `Scan ${mode} Again`; document.getElementById('scanHeading').textContent = 'Multiple suspicious devices detected'; navigate('scan-results'); }, 1600);
+      });
+
+      document.querySelectorAll('[data-resource]').forEach(button => button.addEventListener('click', () => {
+        document.querySelectorAll('[data-resource]').forEach(b => b.classList.toggle('active', b.dataset.resource === button.dataset.resource));
+        renderResources(button.dataset.resource);
+        renderChineseResources(button.dataset.resource);
+      }));
+
+      document.querySelectorAll('input[name="plan"]').forEach(input => input.addEventListener('change', () => {
+        document.querySelectorAll('.plan').forEach(p => p.classList.toggle('selected', p.contains(input) && input.checked));
+      }));
+
+      sourceDevice.querySelectorAll('input[name="recharge-plan"]').forEach(input => input.addEventListener('change', () => {
+        sourceDevice.querySelectorAll('.recharge-plan').forEach(plan => plan.classList.toggle('selected', plan.contains(input) && input.checked));
+      }));
+
+      sheet.addEventListener('click', event => { if (event.target === sheet) setSheet(false); });
+      requirementModal.addEventListener('click', event => { if (event.target === requirementModal) requirementModal.hidden = true; });
+      document.addEventListener('keydown', event => { if (event.key === 'Escape') { setSheet(false); requirementModal.hidden = true; closeVaultDialogs(); } });
+
+      document.getElementById('treeSearch').addEventListener('input', event => {
+        const query = event.target.value.trim().toLowerCase();
+        treeRows.forEach(row => {
+          const isMatch = !query || row.textContent.trim().toLowerCase().includes(query);
+          row.hidden = !isMatch;
+        });
+        document.querySelectorAll('.tree-group').forEach(group => {
+          if (query) group.hidden = false;
+          else {
+            const toggle = document.querySelector(`[data-tree-toggle="${group.dataset.treeGroup}"]`);
+            group.hidden = toggle?.getAttribute('aria-expanded') === 'false';
+          }
+        });
+      });
+
+      renderResources('hospital');
+      renderChineseResources('hospital');
+      renderVaults();
+      const initial = location.hash.slice(1);
+      if (initial.startsWith('doc-')) showDocument(initial.slice(4));
+      else if (screens.some(s => s.dataset.screen === initial)) navigate(initial, false);
+    })();
+  </script>
+</body>
+</html>
