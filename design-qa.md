@@ -47,6 +47,115 @@ No actionable P0, P1, or P2 differences remain.
 
 final result: passed
 
+## Incremental QA · external Markdown requirement source
+
+- Added `需求说明.md` as the editable source for every Chinese prototype module annotation.
+- The HTML fetches the Markdown with cache disabled, parses the seven fixed lines under each module key and overrides only recognized Chinese fields.
+- Unknown keys, unknown fields and empty values are ignored; malformed or unavailable Markdown falls back to the embedded catalog.
+- `file://` explicitly uses the embedded fallback because browsers normally block local-file fetches. The external source is active through the existing localhost preview.
+- Requirement points are mounted after the load attempt, so their accessible names use the latest Markdown title.
+
+final result: passed
+
+## Incremental QA · remove inspector footer copy
+
+- Removed the supplemental footer description from the requirement inspector.
+- Removed its HTML element, CSS rule and both runtime text assignments so the copy cannot reappear when switching requirement points.
+- The six structured requirement fields and close interaction remain unchanged.
+
+final result: passed
+
+## Incremental QA · Chinese-only prototype annotations
+
+- Module requirement points are now generated only inside the Chinese prototype (`data-locale="zh"`).
+- The English prototype retains all screens, content and primary interactions but no longer receives annotation points or requirement-panel triggers.
+- The shared requirement catalog remains bilingual for maintainability; runtime exposure is restricted to the Chinese column.
+
+final result: passed
+
+## Incremental QA · remove flowchart descriptions
+
+- Reference: `/var/folders/nd/rgv0xnnj307gldjrz406j18h0000gn/T/codex-clipboard-5b9d5e57-5f3b-4155-a21a-d3e0a9a76f0b.png`.
+- Removed the explanatory sentence beneath the title from all three native flowchart documents: risk query, restore purchase and membership subscription.
+- Flowchart headings, legends, diagrams, branches and supporting cards remain unchanged.
+
+final result: passed
+
+## Incremental QA · external requirement inspector
+
+- Reference: `/var/folders/nd/rgv0xnnj307gldjrz406j18h0000gn/T/codex-clipboard-05251980-db7b-43f7-8d0e-092c793e5041.png`.
+- Replaced the centered modal and dimmed backdrop with a dedicated right-side requirement inspector outside the bilingual prototype area.
+- Selecting a module point keeps both phone prototypes visible and operable while showing module overview, data source, preconditions, result, display limit and sorting in the third layout column.
+- Switching between English and Chinese points updates the same inspector without reopening an overlay; labels and copy follow the selected prototype locale.
+- Active points expose `aria-expanded=true`, reference the inspector with `aria-controls`, and receive a distinct selected state.
+- Closing the inspector restores focus to its originating point. Escape also closes the inspector, with no backdrop-click behavior because the panel is non-modal.
+- Navigating to another prototype screen or document closes stale inspector content automatically.
+- Verified open, locale switch and close states in the in-app browser at `?v=42#home`; the accessibility tree confirms the prototype and inspector coexist as sibling regions.
+
+No actionable P0, P1, or P2 issues remain in the requested scope.
+
+final result: passed
+
+## Incremental QA · flowchart decision geometry and label clearance
+
+- Reference: `/var/folders/nd/rgv0xnnj307gldjrz406j18h0000gn/T/codex-clipboard-fab3c2e8-f87b-4266-860c-750d56e2252a.png`.
+- Updated all decision nodes in the risk query, restore purchase and membership subscription flowcharts from rounded rectangles to bordered diamonds.
+- Increased the flow canvas minimum width, center decision column, horizontal branch gaps, map padding and vertical connector height.
+- Moved `是 / 否` branch labels into dedicated 44 px connector clearance with opaque backgrounds, borders and foreground stacking so labels no longer sit beneath or overlap nodes.
+- Long decision copy wraps inside the protected center area of each diamond.
+- Narrow layouts retain a single-column fallback; document and canvas containers use scrolling instead of clipping the enlarged diagrams.
+- Visually checked `#doc-flow-subscribe`, `#doc-flow-restore` and `#doc-flow-risk` in the in-app browser; the restore flow confirms the side label, dashed branch and diamond remain visually separated.
+- JavaScript syntax and whitespace checks passed.
+
+No actionable P0, P1, or P2 issues remain in the requested scope.
+
+final result: passed
+
+## Incremental QA · module-level requirement annotations
+
+- Reference: `/var/folders/nd/rgv0xnnj307gldjrz406j18h0000gn/T/codex-clipboard-e280922c-cf37-45f7-8040-2afecff81951.png`.
+- Replaced the former page-level annotation with independent annotations for each functional module in the English and Chinese prototypes.
+- Default state exposes only a small cyan point; overview, data source, preconditions, result, display limit and sorting stay hidden until the point is selected.
+- The point uses a restrained ripple animation, a 44 × 44 px interaction target, keyboard focus styling and a `prefers-reduced-motion` fallback.
+- Verified the Home and Destination Risk Result screens in the in-app browser at `?v=37#home` and `?v=38#risk-result`.
+- Verified English and Chinese dialogs independently; labels and descriptions follow the locale of the selected prototype.
+- The point is positioned per module without changing the module's primary click action; modal close and subsequent point selection remain operable.
+- JavaScript syntax check passed after removing obsolete page-level annotation code.
+
+No actionable P0, P1, or P2 issues remain in the requested scope.
+
+final result: passed
+
+## Incremental QA · native flowchart redraw
+
+- Replaced all three external flowchart iframes with native HTML/CSS flow diagrams inside `index.html`.
+- Source topology was checked against the original Axure pages for risk query, purchase restoration and membership subscription.
+- Risk query keeps the failed-generation retry loop and successful client-render path.
+- Purchase restoration keeps the confirmation, deleted-account check, blocked restoration toast and subscription re-fetch path.
+- Membership subscription keeps payment cancellation, payment failure and active-plan overwrite branches.
+- The risk diagram retains model and JSON field documentation but deliberately redacts the plaintext API key.
+- Each diagram includes text alternatives through `role="img"` and descriptive `aria-label` attributes; branch meaning is expressed with labels as well as color.
+- Visual verification completed in the in-app browser at `#doc-flow-risk`, `#doc-flow-restore` and `#doc-flow-subscribe`.
+- Responsive stacking was added below 700 px; JavaScript syntax check passed and no iframe reference remains.
+
+No actionable P0, P1, or P2 issues remain in the requested scope.
+
+final result: passed
+
+## Incremental QA · bilingual interaction and prototype annotations
+
+- Verified the current build at `http://localhost:8766/摄像头监测原型/?v=31#profile` and `#recharge` in the Codex in-app browser.
+- The project tree now contains one `我的` node only, with `注销账号` and `订阅会员` beneath it.
+- English profile displays `User nickname*****`; Chinese profile displays `用户昵称*****`; neither profile header contains a phone number.
+- Both prototype columns expose the same interactive controls. The Chinese membership entry successfully navigated both columns to the standalone recharge page.
+- Every prototype screen has a pulsing information control. The Chinese Profile control opened a localized modal with page overview, data source, preconditions, post-result, display limit and sorting rule.
+- Changelog contains exactly one record: `2026/9/16 · 1.0.0 · 新增 · 新增 1.0.0 原型。`
+- JavaScript syntax check passed with no errors.
+
+No actionable P0, P1, or P2 issues remain in the requested scope.
+
+final result: passed
+
 ## Incremental QA · remove linked-phone setting
 
 - Source annotation: `/var/folders/nd/rgv0xnnj307gldjrz406j18h0000gn/T/codex-clipboard-cb051fa9-0da7-478b-adbd-c0a04c7c6dee.png`.
@@ -198,5 +307,20 @@ final result: passed
 - Comparison history: the first rendered pass had no actionable P0, P1 or P2 issue, so no corrective visual iteration was required.
 
 No actionable P0, P1, or P2 differences remain within the requested redesign scope.
+
+final result: passed
+
+## Incremental QA · destination risk result flow
+
+- Source of truth: `原型文件/目的地风险查询.html` and `原型文件/风险查询流程图.html`.
+- Added the original post-submit loading state and the result state to both English and Chinese prototypes.
+- Result content preserves the original five fields: Destination, Security Level, Natural-Hazard Alerts, Scam & Violent-Incident Alerts, and Local Customs & Cultural Taboos.
+- The Vancouver example copy is reproduced from the original file; no new risk category or scenario was invented.
+- Interaction verified in the in-app browser: entering `Vancouver` and submitting transitions through loading to `#risk-result` after 1.1 seconds.
+- Both language columns display their matching localized content and provide a direct route back to the query page.
+- The two new screens include the existing prototype information-dot dialog.
+- JavaScript syntax check passed; reduced-motion rules already cover the new loading animation.
+
+No actionable P0, P1, or P2 issues remain in the requested scope.
 
 final result: passed
